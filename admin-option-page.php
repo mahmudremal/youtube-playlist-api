@@ -46,7 +46,7 @@ $channelId = ( isset( $playlists[ 'items' ][ 0 ] ) && isset( $playlists[ 'items'
 						<span class="switch__status disable"><?php _e( 'Hide' ); ?></span>
 					</div>
 					<div class="global__control__button">
-						<button type="button" class="fwp-button js-fwp-settings-update"><?php _e( 'Update' ); ?></button>
+						<button type="button" class="fwp-button js-fwp-settings-update" data-channel="<?php echo esc_attr( ( isset( $_GET[ 'channel' ] ) && isset( $channelList[ $_GET[ 'channel' ] ] ) ) ? '' : $currentChannel ); ?>"><?php _e( 'Update' ); ?></button>
 					</div>
 				</div>
 
@@ -56,20 +56,22 @@ $channelId = ( isset( $playlists[ 'items' ][ 0 ] ) && isset( $playlists[ 'items'
 					</style>
 					<div class="fwp-section mb50">
 						<h3 class="fwp-section__header"><?php echo esc_html( 'Playlists' ); ?></h3>
-						<div class="fwp-element__wrap">
-							<?php
+						<?php
 							if( count( $playlists[ 'items' ] ) <= 0 ) {
 								?>
-                <div class="fwp-tool__card fwp-container fwp-block p30" style="width: 100%;display: block;grid-area: none;clear: both;">
-                  <div class="content">
-                    <h3><?php esc_html_e( 'Nothing found there :(', 'domain' ); ?></h3>
-                    <p>
-                      <?php esc_html_e( 'There is nothing on this channel. If you\'re sure, about your channel, please recheck channel ID you\ve given there. It might be happens by Google API server. Please update your playlist by clicking Update button. If it is again happen, change your youtube API key. Maybe it\'d reached it\'s limit.', 'domain' ); ?>
-                    </p>
-                  </div>
-                </div>
+								<div class="fwp-tool__card fwp-container fwp-block p30" style="max-width: 100%;width: 100%;">
+									<div class="content">
+										<h3><?php esc_html_e( 'Nothing found there :(', 'domain' ); ?></h3>
+										<p>
+											<?php esc_html_e( 'There is nothing on this channel. If you\'re sure, about your channel, please recheck channel ID you\ve given there. It might be happens by Google API server. Please update your playlist by clicking Update button. If it is again happen, change your youtube API key. Maybe it\'d reached it\'s limit.', 'domain' ); ?>
+										</p>
+									</div>
+								</div>
 								<?php
 							}
+						?>
+						<div class="fwp-element__wrap">
+							<?php
 							foreach( $playlists[ 'items' ] as $i => $item ) :
 							$snippet = $item[ 'snippet' ];
 							$thumb = $this->thumb( $snippet[ 'thumbnails' ], 'medium' );
@@ -81,6 +83,7 @@ $channelId = ( isset( $playlists[ 'items' ][ 0 ] ) && isset( $playlists[ 'items'
 								<div class="element__content">
 									<h4><?php echo esc_html( substr( $snippet[ 'title' ], 0, 45 ) ); ?></h4>
 									<div class="element__options">
+										<?php if( isset( $snippet[ 'description' ] ) && ! empty( $snippet[ 'description' ] ) ) : ?>
 										<div class="element__icon" href="javascript:void(0)" data-href="<?php echo esc_url( $this->yturl( 'playlist', [ 'p' => $item[ 'id' ] ] ) ); ?>">
 											<i class="ea-admin-icon ic on-monitor dashicons-before dashicons-lightbulb"></i>
 											<div class="tooltip-text">
@@ -99,6 +102,7 @@ $channelId = ( isset( $playlists[ 'items' ][ 0 ] ) && isset( $playlists[ 'items'
 												</div>
 											</div>
 										</div>
+										<?php endif; ?>
 										<?php if( $this->allow( 'main' ) ) : ?>
 											<label class="fwp-switch">
 												<input class="fwp-widget-item fwp-elements-list fwp-toggle-switcher" name="playlistId[<?php echo esc_attr( $item[ 'id' ] ); ?>]" type="checkbox" <?php echo esc_attr( ( isset( $item[ 'is_Public' ] ) && $item[ 'is_Public' ] ) ? 'checked' : '' ); ?> data-channel="<?php echo esc_attr( $currentChannel ); ?>" data-toggle="playlistId" data-target="<?php echo esc_attr( $item[ 'id' ] ); ?>">

@@ -30,7 +30,7 @@ foreach( $playlists as $i => $list ) {
                 <div class="content fwp-col-sm-12">
                   <h3><?php esc_html_e( 'Youtube PlayLists Shortcodes.', 'domain' ); ?></h3>
                   <p>
-                    <?php echo sprintf( __( 'Shortcodes are used like a hook, or if I explain it simply, shortcode are like a function. Just use it anywhere anytime. How you can use it?%sFor this you\'ve use shortcode widget. Please see this three screenshot below..', 'domain' ), '<br>' ); ?>
+                    <?php echo sprintf( __( 'Shortcodes are used like a hook, or if I explain it simply, shortcode are like a function. Just use it anywhere anytime. How you can use it?%sFor this you\'ve use shortcode widget. Please see this three screenshot below.', 'domain' ), '<br>' ); ?>
                   </p>
                   <div class="line"></div>
                   <div class="fwp-flex shortcodes-tutorial-img">
@@ -44,7 +44,7 @@ foreach( $playlists as $i => $list ) {
                       <img src="<?php echo esc_url( YOUTUBE_PLAYLIST_API_INTEGRATION_URL . '/assets/img/3.PNG' ); ?>" alt="Use your code here">
                     </div>
                   </div>
-                  <div class="line"></div>
+                  <!-- <div class="line"></div>
                   <p>
                     <?php echo sprintf( __( 'If you use WordPress default editor, so follow these screenshots.', 'domain' ), '<br>' ); ?>
                   </p>
@@ -58,7 +58,7 @@ foreach( $playlists as $i => $list ) {
                     <div class="fwp-col-sm-4">
                       <img src="<?php echo esc_url( YOUTUBE_PLAYLIST_API_INTEGRATION_URL . '/assets/img/6.PNG' ); ?>" alt="Use your code here">
                     </div>
-                  </div>
+                  </div> -->
                   
                   <div class="line"></div>
                   <p>

@@ -5,13 +5,14 @@
 	 */
 	class YOUTUBE_PLAYLIST_FRONTEND_SCRIPT {
     settings;
+    denaid;
 		/**
 		 * Constructor
 		 */
 		constructor() {
       this.settings = {
-        key              : siteConfig?.youtubeApi ?? "AIzaSyAk_sfoVdJ6CbBIAezTlh-1AtWgsVCErCs",
-        id               : "GoogleDevelopers",  // 'PLIbMQVUKxl0Q_2xwvKZZEf2gc4swtv7Wn', // youtube user id is case sensitive
+        key              : siteConfig?.youtubeApi ?? "",
+        id               : "GoogleDevelopers", // youtube user id is case sensitive
         max_results      : 50,
         autoplay         : 0,
         theme            :'dark',
@@ -19,9 +20,10 @@
         scroll_duration  : 500,
         first_load       : true,
         complete: function( e ) {
-          console.log( 'Completation fired' );
+          // console.log( 'Completation fired' );
         }
       };
+      this.denaid = false;
       this.init();
     }
 		/**
@@ -31,6 +33,9 @@
       this.popup();
       // this.click();
 		}
+    /**
+     * Function to execute popup
+     */
 		popup() {
 			const thisClass = this;
 			// const $ = jQuery;
@@ -46,6 +51,7 @@
             <div class="popup-center-content">\
               <iframe id="fwp-player-iframe" width="560" height="315" src="' + videoUrl + '" frameborder="0" allowfullscreen></iframe>\
               <ul id="youtube-playlists"></ul>\
+              <i class="fas fa-times yt-popup-closer"></i>\
             </div>\
           </div>';
           $( 'body' ).append( popup );
@@ -56,10 +62,20 @@
         }
 			} );
 		}
+    /**
+     * returns Control if it is active or default poppup
+     */
+    active() {
+      return true;
+    }
+    /**
+     * After popup called event
+     */
 		popevent( elem ) {
       const thisClass = this;
 			$( elem ).addClass( 'show' );
-      $( window ).resize(thisClass.height());
+			$( elem ).find( '.yt-popup-closer' ).addClass( 'show' );
+      $( window ).resize( thisClass.height() );
 			$( document ).on( 'keyup', function( e ) {
 				if ( e.key === "Escape" ) {
 					$( '.yt-popup' ).remove();
@@ -68,10 +84,13 @@
 			$( elem ).on( 'click', function( e ) {
 				e.preventDefault();
 				e.stopPropagation();
-				$( elem ).remove();
+				// $( elem ).remove();
 			} );
 			$( elem ).children( '.popup-center-content' ).on( 'click', function( e ) {
 				e.stopPropagation();
+			} );
+			$( elem ).find( '.yt-popup-closer' ).on( 'click', function( e ) {
+				$( elem ).remove();
 			} );
 		}
     fwp_iframe_src( id, autoplay, theme ){
@@ -79,6 +98,9 @@
       var src = 'https://www.youtube.com/embed/' + id + '?version=3&loop=1&autoplay=' + autoplay + '&rel=0&showsearch=0&showinfo=0&theme=' + theme;
       return src;
     }
+    /**
+     * Is used to refresh sized on control.
+     */
     height(){
       var ratio = 1.7777777777777777 // ratio for 640*360 video 
       var player_width = $( '.yt-popup .popup-center-content' ).width();
@@ -114,7 +136,7 @@
     }
     player( playlist ) {
 			const thisClass = this;var settings = thisClass.settings, max_results = 50, next_page = "", next_page_data = "", url = "", first_load = settings.first_load;
-      // if(settings.key === ""){console.log( 'api key not defined' );return;}
+      if(settings.key === ""){console.log( 'api key not defined' );return;}
       
       next_page_data = $( '#fwpspidochetube_loadmore' ).attr( 'data-next' );
       next_page = ( next_page_data !== undefined ) ? next_page_data : next_page;
@@ -125,12 +147,13 @@
     getJSON( url ) {
       const thisClass = this;
       $.getJSON( url, function( data ) {
-        thisClass.rander( data );
-        console.log( data );
+        if( data.error ) {thisClass.denaid = true;console.log( data.error.code, data.error.message );}
+        else {thisClass.rander( data );}
+        // console.log( data );
       } ).then( function() {
         thisClass.autoplay();
       }, function( error ) {
-        console.log( error );
+        // console.log( error );
       } );
     }
     rander( data ) {
@@ -180,7 +203,7 @@
       // $( 'body' ).append( iframe_html );
       $( '#fwpspidochetube_loadmore' ).off( 'click' ).on( 'click',function( e ) {
         e.preventDefault();
-        console.log( 'Request to Load more' );
+        // console.log( 'Request to Load more' );
       } );
       $( '#youtube-playlists li a' ).off( 'click' ).on( 'click',function( e ) {
         e.preventDefault();

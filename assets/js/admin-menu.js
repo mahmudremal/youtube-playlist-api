@@ -207,8 +207,10 @@
 		reload() {
 			$( '.js-fwp-settings-update' ).on( 'click', function( e ) {
 				e.preventDefault();
+        var channel = $( this ).data( 'channel' ), url = location.href;
+        url += ( channel == '' ) ? '' : '&channel=' + channel;
 				if( confirm( siteConfig?.confirmUpdate ?? 'Are you sure you want to update this playlist?' ) ) {
-					location.href = location.href + '&update=true';
+					location.href = url + '&update=true';
 				}
 			} );
 		}
