@@ -9,6 +9,7 @@
  * @link		https://futurewordpress.com/
  * @version		1.3.6
  */
+defined( 'ABSPATH' ) || exit;
 
 $settings = get_option( YOUTUBE_API_SPECIAL_PLAYLIST_CONTROL[ 'option_prefix' ] . '_settings', [] );
 $playlists = isset( $settings[ 'playlists' ] ) ? $settings[ 'playlists' ] : [];

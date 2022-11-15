@@ -9,6 +9,7 @@
  * @link		https://futurewordpress.com/
  * @version		1.3.6
  */
+defined( 'ABSPATH' ) || exit;
 
 $channelList = $this->channels();
 $currentChannel = ( isset( $_GET[ 'channel' ] ) && isset( $channelList[ $_GET[ 'channel' ] ] ) ) ? $_GET[ 'channel' ] : YOUTUBE_API_SPECIAL_PLAYLIST_CONTROL[ 'channelId' ];
