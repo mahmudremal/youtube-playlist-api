@@ -1,120 +1,120 @@
-#fwp-youtube-player:before {
-  content: "";
-  height: 100vh;
-  width: 100vw;
-  background: #111;
-  position: fixed;
-  top: 0;
-  left: 0;
-}
-.fwpspidochetube {
-  max-width: 960px;
-  margin: auto;
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
-.fwpspidochetube_inner {
-  float: left;
-  background-color: #111;
-  padding: 10px;
-  width: 100%;
-  box-sizing: border-box;
-}
-#fwpspidochetube_player {
-  width: 68.0852%;
-  float: left;
-}
-
-#fwp-player {
-  width: 100%;
-}
-
-#fwpspidochetube_list {
-  overflow: auto;
-  float: right;
-  -webkit-overflow-scrolling: touch;
-  width: 31%;
-  background-color: #111;
-  padding: 5px 0;
-  border: 1px solid #000;
-  border-left: none;
-  margin: 0;
-  padding-top: 38%;
-  height: 0;
-}
-
-#fwpspidochetube_list li {
-  border-top: 1px solid #1F1F1F;
-  border-bottom: 1px solid #000;
-  display: block;
-  margin-left: 12px;
-  padding: 6px 0;
-  cursor: pointer;
-  background-color: #111;
-  position: relative;
-}
-
-#fwpspidochetube_list li:first-child {
-  border-top: none
-}
-
-#fwpspidochetube_list li:last-child {
-  border-bottom: none
-}
-
-#fwpspidochetube_list li:hover {
-  background: #0F0F0F;
-}
-
-#fwpspidochetube_list li span {
-  color: #999;
-  display: inline-block;
-  width: 50%;
-  margin-left: 4%;
-  margin-right: 3%;
-  font-size: 12px;
-  word-break: break-word;
-}
-
-#fwpspidochetube_list li img {
-  vertical-align: top;
-  width: 43%;
-}
-
-#fwpspidochetube_list li.fwpspidochetube_current, #fwpspidochetube_list li:hover.fwpspidochetube_current {
-  background-color: #202325;
-}
-
-#fwpspidochetube_list li.fwpspidochetube_current span {
-  color: #fff;
-}
-
-ul#fwpspidochetube_list li:first-child {
-  margin-top: -120%;
-}
-
-#fwpspidochetube_list li a {
-  width: 100%;
-  display: block;
-  margin: 0;
-}
-@media (max-width: 480px){
-
-  #fwpspidochetube_list li{
-      margin-left:5px;
-      margin-right:5px;
-  }
-
-  #fwpspidochetube_list li img {
-      width: 100%;
-  }
-
-  #fwpspidochetube_list li span {
-      width: 100%;
-      margin-left: 0;
-      margin-right: 0;
-      margin-top: 4px;
-  }
-}
+#fwp-youtube-player:before {
+  content: "";
+  height: 100vh;
+  width: 100vw;
+  background: #111;
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+.fwpspidochetube {
+  max-width: 960px;
+  margin: auto;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.fwpspidochetube_inner {
+  float: left;
+  background-color: #111;
+  padding: 10px;
+  width: 100%;
+  box-sizing: border-box;
+}
+#fwpspidochetube_player {
+  width: 68.0852%;
+  float: left;
+}
+
+#fwp-player {
+  width: 100%;
+}
+
+#fwpspidochetube_list {
+  overflow: auto;
+  float: right;
+  -webkit-overflow-scrolling: touch;
+  width: 31%;
+  background-color: #111;
+  padding: 5px 0;
+  border: 1px solid #000;
+  border-left: none;
+  margin: 0;
+  padding-top: 38%;
+  height: 0;
+}
+
+#fwpspidochetube_list li {
+  border-top: 1px solid #1F1F1F;
+  border-bottom: 1px solid #000;
+  display: block;
+  margin-left: 12px;
+  padding: 6px 0;
+  cursor: pointer;
+  background-color: #111;
+  position: relative;
+}
+
+#fwpspidochetube_list li:first-child {
+  border-top: none
+}
+
+#fwpspidochetube_list li:last-child {
+  border-bottom: none
+}
+
+#fwpspidochetube_list li:hover {
+  background: #0F0F0F;
+}
+
+#fwpspidochetube_list li span {
+  color: #999;
+  display: inline-block;
+  width: 50%;
+  margin-left: 4%;
+  margin-right: 3%;
+  font-size: 12px;
+  word-break: break-word;
+}
+
+#fwpspidochetube_list li img {
+  vertical-align: top;
+  width: 43%;
+}
+
+#fwpspidochetube_list li.fwpspidochetube_current, #fwpspidochetube_list li:hover.fwpspidochetube_current {
+  background-color: #202325;
+}
+
+#fwpspidochetube_list li.fwpspidochetube_current span {
+  color: #fff;
+}
+
+ul#fwpspidochetube_list li:first-child {
+  margin-top: -120%;
+}
+
+#fwpspidochetube_list li a {
+  width: 100%;
+  display: block;
+  margin: 0;
+}
+@media (max-width: 480px){
+
+  #fwpspidochetube_list li{
+      margin-left:5px;
+      margin-right:5px;
+  }
+
+  #fwpspidochetube_list li img {
+      width: 100%;
+  }
+
+  #fwpspidochetube_list li span {
+      width: 100%;
+      margin-left: 0;
+      margin-right: 0;
+      margin-top: 4px;
+  }
+}
