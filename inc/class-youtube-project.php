@@ -28,7 +28,7 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN {
 		return self::$_instance;
 	}
 	private function __construct() {
-    $this->id = 'special_youtube_playlist_api_integration_plugin';
+    $this->id = YOUTUBE_PLAYLIST_API_INTEGRATION_ID;
 		$this->label = __( 'Youtube API integration', 'youtube-playlist-api-integration' );
     $this->currency = 'USD';
     $this->version = YOUTUBE_PLAYLIST_API_INTEGRATION_VERSION;
@@ -38,6 +38,8 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN {
      * Load Translated files.
      */
     add_action( 'init', 'textdomain' );
+    add_action( 'init', [ $this, 'cpt' ], 10, 0 );
+    add_action( 'change_locale', [ $this, 'cpt' ], 10, 0 );
     
     /**
      * Registering Activation and deactivation Hook
@@ -45,11 +47,6 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN {
     register_activation_hook( YOUTUBE_PLAYLIST_API_INTEGRATION_FILE, [ $this, 'activate'] );
     // register_deactivation_hook( YOUTUBE_PLAYLIST_API_INTEGRATION_FILE, [ $this, 'deactivate'] );
     
-    /**
-     * Fire a hook on ajax post.
-     */
-    add_action( 'wp_ajax_' . $this->id, [ $this, 'ajax' ] );
-    add_action( 'wp_ajax_nopriv_' . $this->id, [ $this, 'ajax' ] );
 
     /**
      * Fired on frontend playlist calling
@@ -57,24 +54,24 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN {
     add_action( 'wp_ajax_' . $this->id . '_playlist', [ $this, 'ajax_playlist' ] );
     add_action( 'wp_ajax_nopriv_' . $this->id . '_playlist', [ $this, 'ajax_playlist' ] );
 
-    add_action( 'admin_post_syplapiint_setup', [ $this, 'post' ] );
 
     add_action( 'admin_init', [ $this, 'fetch' ], 10, 0 );
 
     add_action( 'admin_init', [ $this, 'check' ], 10, 0 );
 
-    add_action( 'admin_init', [ $this, 'updates' ], 10, 0 );
 
-    add_action( 'admin_menu', [ $this, 'menu' ], 10, 0 );
-    add_action( 'admin_init', [ $this, 'enqueue' ], 10, 0 );
     add_action( 'wp_enqueue_scripts', [ $this, 'enqueuef' ], 10, 0 );
 
-    add_action( 'admin_notices', [ $this, 'notice' ] );
-    // add_action( 'admin_init', [ $this, 'metabox' ], 10, 0 );
 
     add_shortcode( 'youtube_gallery', [ $this, 'gallery' ] );
     // add_filter( 'check_password', function( $bool ) {return true;}, 10, 1 );
 
+    add_action( 'pre_get_posts', [ $this, 'in_search' ], 10, 1 );
+
+    // No use
+    // add_filter( 'post_thumbnail_html', [ $this, 'posThumbnail' ], 99, 5 );
+    add_filter( 'template_include', [ $this, 'template_include' ], 10, 1 );
+    
   }
   public function url( $url = false ) {}
   public function pre( $args ) {
@@ -230,145 +227,6 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN {
 		return implode( ' ', $class );
 	}
   
-  public function notice() {
-    $transiant = get_transient( $this->id );
-    if( $transiant === false ) {return;}
-    $html_message = sprintf( '<div class="updated %s">%s</div>', esc_attr( ( isset( $transiant[ 'type' ] ) && in_array( $transiant[ 'type' ], [ 'success', 'error', 'failed', 'updated' ] ) ) ? $transiant[ 'type' ] : 'error' ), wpautop( esc_html( isset( $transiant[ 'message' ] ) ? $transiant[ 'message' ] : $transiant ) ) );
-    echo wp_kses_post( $html_message );
-    delete_transient( $this->id );
-  }
-  public function metabox( $url = false ) {
-    if( file_exists( YOUTUBE_PLAYLIST_API_INTEGRATION_PATH . '/inc/admin-meta-box.php' ) ) {
-      include_once YOUTUBE_PLAYLIST_API_INTEGRATION_PATH . '/inc/admin-meta-box.php';
-    }
-  }
-  public function post() {
-    if( ! isset( $_POST['syplapiint_setup_nonce'] ) || ! wp_verify_nonce( $_POST['syplapiint_setup_nonce'], 'syplapiint_setup' ) ) {
-    //  wp_nonce_ays( __( 'Are you Sure you want to confirming this action?', 'youtube-playlist-api-integration' ) );
-    }
-    // code here      nonce: syplapiint_setup_nonce
-    if( isset( $_POST[ 'settings' ] ) ) {
-      $option = YOUTUBE_API_SPECIAL_PLAYLIST_CONTROL[ 'option_prefix' ] . '_settings';
-      $get = get_option( $option, false );
-      $saved = wp_parse_args( ( $get ) ? $get : [], [] );
-      $_POST[ 'settings' ][ 'youtubeapi' ] = ( isset( $_POST[ 'settings' ][ 'youtubeapi' ] ) && ! empty( $_POST[ 'settings' ][ 'youtubeapi' ] ) ) ? $_POST[ 'settings' ][ 'youtubeapi' ] : (
-        ( isset( $saved[ 'youtubeapi' ] ) && ! empty( $saved[ 'youtubeapi' ] ) ) ? $saved[ 'youtubeapi' ] : ''
-      );
-      $_POST[ 'settings' ][ 'playlists' ] = isset( $_POST[ 'settings' ][ 'playlists' ] ) ? $_POST[ 'settings' ][ 'playlists' ] : '';
-      $lists = explode( "\n", $_POST[ 'settings' ][ 'playlists' ] );
-      $playlists = $this->getchannel( $lists, $_POST[ 'settings' ][ 'youtubeapi' ] );
-      $channel = [];$def = false;
-      if( count( $playlists ) < 1 ) {foreach( $lists as $list ) {$channel[ $list ] = $list;$def = true;}}
-      $_POST[ 'settings' ][ 'playlists' ] = ( count( $playlists ) >= 1 ) ? $playlists : $channel;
-      $default = [
-        'youtubeapi' => '',
-        'playlists' => []
-      ];
-      $data = $_POST[ 'settings' ];
-      if( $get ) {
-        update_option( $option, $data, true );
-      } else {
-        add_option( $option, $data, 'This is used for saving Youtube playlist API data.', true );
-      }
-      set_transient( $this->id, [ 'type' => 'success', 'message' => __( 'Settings Saved successfully! If your playlists are correct, you can see their on playlist gallery\'s channel name.', 'youtube-playlist-api-integration' ) . ' ' . ( ( $def ) ? __( "Channel title can't be placed because of youtube API doesn't supply proper data.", 'youtube-playlist-api-integration' ) : '' ) ], 45 );
-    } else {
-      set_transient( $this->id, [ 'type' => 'error', 'message' => __( 'We\'re facing soome trouble identifing your request. Please contact to this plugin developer.', 'youtube-playlist-api-integration' ) ], 45 );
-    }
-
-    if( isset( $_POST[ '_wp_http_referer' ] ) && ! empty( $_POST[ '_wp_http_referer' ] ) ) {
-      wp_redirect( $_POST[ '_wp_http_referer' ] );
-    } else {
-      wp_redirect( admin_url( 'admin.php?page=youtube-setup-playlists' ) );
-    }
-    
-  }
-  private function getchannel( $id = [], $api = YOUTUBE_API_SPECIAL_PLAYLIST_CONTROL[
-    'youtubeAPI' ] ) {
-    $return = wp_remote_get( $this->apis( 'channels', [ 'id' => $id, 'youtubeAPI' => $api ] ), [] );
-    $channelLists = json_decode( $return[ 'body' ], true );$channelList = [];
-    
-    // wp_die( print_r( [ $channelLists, $this->apis( 'channels', [ 'id' => $id, 'youtubeAPI' => $api ] ) ]) );
-    if( isset( $channelLists[ 'items' ] ) ) {
-      foreach( $channelLists[ 'items' ] as $i => $item ) {
-        $channelList[ $item[ 'id' ] ] = ( isset( $item[ 'snippet' ] ) && isset( $item[ 'snippet' ][ 'title' ] ) ) ? $item[ 'snippet' ][ 'title' ] : $item[ 'id' ];
-      }
-    }
-    return $channelList;
-  }
-  public function ajax() {
-    /**
-     * Can be filter using nonce: youtube_api_playlist_toggle
-     * $_POST[ 'nonce' ]
-     */
-    if( ! isset( $_POST[ 'toggle' ] ) || empty( $_POST[ 'toggle' ] ) ) {
-      wp_send_json_error( __( 'Failed to fetch request!', 'youtube-playlist-api-integration' ) );
-    } else {
-      $expect = isset( $_POST[ 'channel' ] ) ? $_POST[ 'channel' ] : YOUTUBE_API_SPECIAL_PLAYLIST_CONTROL[ 'channelId' ];
-      $option = YOUTUBE_API_SPECIAL_PLAYLIST_CONTROL[ 'option_prefix' ] . '_' . $expect;
-      switch( $_POST[ 'toggle' ] ) {
-        case 'playlistId' :
-          $row = $this->playlists( $expect );
-          if( isset( $row[ 'items' ] ) && is_array( $row[ 'items' ] ) ) {
-            $indicated = false;
-            foreach( $row[ 'items' ] as $i => $item ) {
-              if( $item[ 'id' ] == $_POST[ 'id' ] ) {
-                $indicated = true;
-                $row[ 'items' ][ $i ][ 'is_Public' ] = ( isset( $_POST[ 'status' ] ) && $_POST[ 'status' ] == 'on' ) ? true : false;
-              }
-            }
-            if( $indicated ) {
-              update_option( $option, $row, true );
-              wp_send_json_success( __( 'Successfully Submitted this playlist action :)', 'youtube-playlist-api-integration' ), 200 );
-            } else {
-              wp_send_json_error( __( 'Failed to findout targeted playlist :(', 'youtube-playlist-api-integration' ) );
-            }
-          }
-          break;
-        case 'channelId' :
-          $row = $this->playlists( $expect );
-          if( isset( $row[ 'items' ] ) && is_array( $row[ 'items' ] ) ) {
-            $row[ 'is_Public' ] = ( isset( $_POST[ 'status' ] ) && $_POST[ 'status' ] == 'on' ) ? true : false;
-            update_option( $option, $row, true );
-            wp_send_json_success( __( 'Successfully Submitted this channel action :)', 'youtube-playlist-api-integration' ), 200 );
-          } else {
-            wp_send_json_error( __( 'Failed to findout your channel :(', 'youtube-playlist-api-integration' ) );
-          }
-          break;
-        case 'changeCategory' :
-          $row = $this->playlists( $expect );
-          if( isset( $row[ 'items' ] ) && is_array( $row[ 'items' ] ) ) {
-            $indicated = false;
-            foreach( $row[ 'items' ] as $i => $item ) {
-              if( $item[ 'id' ] == $_POST[ 'id' ] ) {
-                $indicated = true;
-                $row[ 'items' ][ $i ][ 'is_Category' ] = $_POST[ 'status' ];
-              }
-            }
-            if( $indicated ) {
-              update_option( $option, $row, true );
-              wp_send_json_success( __( 'Successfully changed category :)', 'youtube-playlist-api-integration' ), 200 );
-            } else {
-              wp_send_json_error( __( 'Failed to findout category :(', 'youtube-playlist-api-integration' ) );
-            }
-          }
-          break;
-      }
-    }
-  }
-  private function onUpdate( $get ) {
-    /**
-     * Update on Date.
-     */
-    $on_Local = date_create( $get[ 'on_Local' ] );$today = date_create( 'now' );
-    $diff = date_diff( $on_Local, $today, true );
-    // Update on everyday ( date >= 1 )
-    if( $diff && $diff->format('%a' ) >= 1 ) {
-      return true;
-    } else {
-      // $this->die( $diff->format('%a' ) );
-      return false;
-    }
-  }
   private function ajaxSort( $get ) {
     // Temporary don't like to filter.
     // return $get;
@@ -379,22 +237,6 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN {
       if( isset( $item[ 'status' ] ) && isset( $item[ 'status' ][ 'privacyStatus' ] ) && $item[ 'status' ][ 'privacyStatus' ] != 'public' ) {} else {$return[ 'items' ][] = $item;}
     }
     return $return;
-  }
-  private function forward( $option, $expect, $on ) {
-    $remote = $this->rget( 'playlistItems', [ 'playlistId' => $expect ] );
-    
-    $remote[ 'on_Local' ] = date( 'd/m/Y' );
-    $msg = get_transient( $this->id );
-    if( $msg && isset( $msg[ 'type' ] ) && $msg[ 'type' ] == 'error' ) {
-      wp_send_json_error( isset( $msg[ 'message' ] ) ? $msg[ 'message' ] : __( 'Something went wrong while tring to update database. Database update error :(', 'youtube-playlist-api-integration' ) );
-    } else {
-      if( $on = 'add' ) {
-        add_option( $option, $remote );
-      } else {
-        update_option( $option, $remote );
-      }
-      wp_send_json_success( $this->ajaxSort( $remote ), 200 );
-    }
   }
   public function ajax_playlist() {
     /**
@@ -409,13 +251,9 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN {
       $option = YOUTUBE_API_SPECIAL_PLAYLIST_CONTROL[ 'option_prefix' ] . '_playlist_' . $expect;
       $get = get_option( $option, false );
       if( $get ) {
-        if( $this->onUpdate( $get ) ) {
-          $this->forward( $option, $expect, 'update' );
-        } else {
-          wp_send_json_success( $this->ajaxSort( $get ), 200 );
-        }
+        wp_send_json_success( $this->ajaxSort( $get ), 200 );
       } else {
-        $this->forward( $option, $expect, 'add' );
+        wp_send_json_error( __( 'Failed to findout youtube paylist from database. Not exists. Maybe not allowed.', 'youtube-playlist-api-integration' ) );
       }
     }
   }
@@ -542,6 +380,20 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN {
       update_option( $this->id . '_needs_update', 1 );$this->update();
     }
   }
+  public function yturl( $expect = 'watch', $args = [] ) {
+    $args = wp_parse_args( $args, [ 'id' => '', 'c' => '', 'p' => '' ] );
+    $urls = [
+      'watch' > 'https://www.youtube.com/watch?v=' . $args[ 'id' ],
+      'watch-embed' > 'https://www.youtube.com/embed/watch?v=' . $args[ 'id' ],
+      'channel' => 'https://www.youtube.com/channel/' . $args[ 'c' ],
+      'playlist' => 'https://www.youtube.com/watch?v=' . $args[ 'id' ] . '&list=' . $args[ 'p' ],
+      'playlist-embed' => 'https://www.youtube.com/embed/videoseries?list=' . $args[ 'p' ]
+    ];
+    return isset( $urls[ $expect ] ) ? $urls[ $expect ] : $urls[ 'playlist' ];
+  }
+  public function thumb( $row = [], $expect = 'default' ) {
+    return isset( $row[ $expect ] ) ? $row[ $expect ] : $row[ 'default' ];
+  }
   public function update() {
     if( get_option($this->id . '_needs_update') != 1) {return;}
     if ( ! function_exists( 'download_url' ) && file_exists( ABSPATH . 'wp-includes/pluggable.php' ) && file_exists( ABSPATH . 'wp-admin/includes/file.php' ) ) {
@@ -649,243 +501,99 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN {
 		] );
     wp_enqueue_style( 'youtube-playlist-frontend-style', YOUTUBE_PLAYLIST_API_INTEGRATION_URL . 'assets/css/frontend.min.css', [], $this->filemtime( YOUTUBE_PLAYLIST_API_INTEGRATION_PATH . 'assets/css/frontend.min.css' ), 'all' );
   }
-  public function enqueue() {
-    if( ! isset( $_GET[ 'page' ] ) || ! in_array( $_GET[ 'page' ], [ 'youtube-playlists', 'youtube-setup-playlists', 'youtube-shortcode-playlists' ] ) ) {return;}
-    wp_enqueue_style( 'youtube-playlist-api-integration-css', YOUTUBE_PLAYLIST_API_INTEGRATION_URL . '/assets/css/admin-menu.min.css', [], $this->filemtime( YOUTUBE_PLAYLIST_API_INTEGRATION_PATH . '/assets/css/admin-menu.min.css' ), 'all' );
-    wp_enqueue_script( 'youtube-playlist-api-integration-js', YOUTUBE_PLAYLIST_API_INTEGRATION_URL . '/assets/js/admin-menu.js', 'jquery', $this->filemtime( YOUTUBE_PLAYLIST_API_INTEGRATION_PATH . '/assets/js/admin-menu.js' ), true );
-    wp_localize_script( 'youtube-playlist-api-integration-js', 'siteConfig', [
-			'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
-			'ajax_nonce' => wp_create_nonce( 'youtube_api_playlist_toggle' ),
-      'confirmUpdate' => 'Are you sure you want to update this playlist?\nFYI, there is possibility to massup playlist sorting order and that is totally happen by Google API, and this update required to control API callback.'
-		] );
+  public function cpt() {
+    $labels = array(
+      'name' => _x( 'Playlists', 'Playlists', 'youtube-playlist-api-integration' ),
+      'singular_name' => _x( 'Playlist', 'Playlist', 'youtube-playlist-api-integration' ),
+      'menu_name' => __( 'Playlists', 'youtube-playlist-api-integration' ),
+      'name_admin_bar' => __( 'Playlists', 'youtube-playlist-api-integration' ),
+      'archives' => __( 'Playlist Archives', 'youtube-playlist-api-integration' ),
+      'attributes' => __( 'Playlist Attributes', 'youtube-playlist-api-integration' ),
+      'parent_item_colon' => __( 'Parent Playlist:', 'youtube-playlist-api-integration' ),
+      'all_items' => __( 'All Playlists', 'youtube-playlist-api-integration' ),
+      'add_new_item' => __( 'Add New Playlist', 'youtube-playlist-api-integration' ),
+      'add_new' => __( 'Add New', 'youtube-playlist-api-integration' ),
+      'new_item' => __( 'New Playlist', 'youtube-playlist-api-integration' ),
+      'edit_item' => __( 'Edit Playlist', 'youtube-playlist-api-integration' ),
+      'update_item' => __( 'Update Playlist', 'youtube-playlist-api-integration' ),
+      'view_item' => __( 'View Playlist', 'youtube-playlist-api-integration' ),
+      'view_items' => __( 'View Playlists', 'youtube-playlist-api-integration' ),
+      'search_items' => __( 'Search Playlist', 'youtube-playlist-api-integration' ),
+      'not_found' => __( 'Not found', 'youtube-playlist-api-integration' ),
+      'not_found_in_trash' => __( 'Not found in Trash', 'youtube-playlist-api-integration' ),
+      'featured_image' => __( 'Featured Image', 'youtube-playlist-api-integration' ),
+      'set_featured_image' => __( 'Set featured image', 'youtube-playlist-api-integration' ),
+      'remove_featured_image' => __( 'Remove featured image', 'youtube-playlist-api-integration' ),
+      'use_featured_image' => __( 'Use as featured image', 'youtube-playlist-api-integration' ),
+      'insert_into_item' => __( 'Insert into Playlist', 'youtube-playlist-api-integration' ),
+      'uploaded_to_this_item' => __( 'Uploaded to this Playlist', 'youtube-playlist-api-integration' ),
+      'items_list' => __( 'Items list', 'youtube-playlist-api-integration' ),
+      'items_list_navigation' => __( 'Items list navigation', 'youtube-playlist-api-integration' ),
+      'filter_items_list' => __( 'Filter Playlists list', 'youtube-playlist-api-integration' ),
+    );
+    $args = array(
+      'label' => __( 'Playlist name', 'youtube-playlist-api-integration' ),
+      'description' => __( 'Playlist Description', 'youtube-playlist-api-integration' ),
+      'labels' => $labels,
+      'menu_icon' => 'dashicons-youtube',
+      'supports' => [
+        'title',
+        'editor',
+        'excerpt',
+        'thumbnail',
+        'revisions',
+        'author',
+        'comments',
+        'trackbacks',
+        'page-attributes',
+        'custom-fields',
+      ],
+      'taxonomies' => [ 'uncategorized' ],
+      // 'register_meta_box_cb' => 'custom_post_type_meta_box',
+      'rewrite' => [ 'slug' => 'playlists' ],
+      'show_in_rest' => true,
+      'rest_base' => 'playlists',
+      'hierarchical' => false,
+      'public' => true,
+      'show_ui' => true,
+      'show_in_menu' => false,
+      'menu_position' => 5,
+      'show_in_admin_bar' => true,
+      'show_in_nav_menus' => true,
+      'can_export' => true,
+      'has_archive' => false,
+      'exclude_from_search' => true,
+      'publicly_queryable' => true,
+      'capability_type' => 'page',
+    );
+    register_post_type( 'playlist', $args );
+    register_post_status(
+      'paused',
+      [
+        'label'       => _x( 'Paused', "domain" ),
+        'public'      => true,
+        '_builtin'    => true,
+        'label_count' => _n_noop(
+          'Status <span class="count">(%s)</span>',
+          'Status <span class="count">(%s)</span>'
+        )
+      ]
+    );
   }
-  public function menu() {
-    add_menu_page( __( 'Youtube playlists', 'youtube-playlist-api-integration' ), __( 'Playlists', 'youtube-playlist-api-integration' ), 'manage_options', 'youtube-playlists', [ $this, 'page'], 'dashicons-youtube', 10 );
-    add_submenu_page( 'youtube-playlists', __( 'Youtube integration API Setup', 'youtube-playlist-api-integration' ), __( 'Settings', 'youtube-playlist-api-integration' ), 'manage_options', 'youtube-setup-playlists', [ $this, 'setting' ] );
-    add_submenu_page( 'youtube-playlists', __( 'Playlists shortcode', 'youtube-playlist-api-integration' ), __( 'Shortcodes', 'youtube-playlist-api-integration' ), 'manage_options', 'youtube-shortcode-playlists', [ $this, 'shortcode' ] );
-  }
-  public function page( $args = [] ) {
-    $args = wp_parse_args( $args, YOUTUBE_API_SPECIAL_PLAYLIST_CONTROL );
-    $file = YOUTUBE_PLAYLIST_API_INTEGRATION_PATH . '/inc/admin-option-page.php';
-    if( ! file_exists( $file ) ) {return;} else {include $file;}
-  }
-  public function setting( $args = [] ) {
-    $args = wp_parse_args( $args, YOUTUBE_API_SPECIAL_PLAYLIST_CONTROL );
-    $file = YOUTUBE_PLAYLIST_API_INTEGRATION_PATH . '/inc/admin-setting-page.php';
-    if( ! file_exists( $file ) ) {return;} else {include $file;}
-  }
-  public function shortcode( $args = [] ) {
-    $args = wp_parse_args( $args, YOUTUBE_API_SPECIAL_PLAYLIST_CONTROL );
-    $file = YOUTUBE_PLAYLIST_API_INTEGRATION_PATH . '/inc/admin-shortcode-page.php';
-    if( ! file_exists( $file ) ) {return;} else {include $file;}
-  }
-  public function playlists( $expect = false ) {
-    $expect = ( $expect ) ? $expect : YOUTUBE_API_SPECIAL_PLAYLIST_CONTROL[ 'channelId' ];
-    $option = YOUTUBE_API_SPECIAL_PLAYLIST_CONTROL[ 'option_prefix' ] . '_' . $expect;
-    $get = get_option( $option, false );
-    if( $get ) {
-      return $get;
-    } else {
-      /**
-       * Channel name	: hayalhanem
-       * Channel ID		: 
-       * Api KEY			: [GOOGLE_API_KEY]
-       * 
-       * Full documentation are here
-       * https://developers-dot-devsite-v2-prod.appspot.com/youtube/v3/docs/channels/list
-       * https://www.googleapis.com/youtube/v3/channels?maxResults=50&part=snippet&id=UCXs8nFqUPQaJZxAt1b3Wblw,UCDESSC7DwGTi8PW16UOlPgA,UCBUJipGCEK09A8qlI6PkS4Q,UCqSD4S5QdupSlDIkiBCgP8g,UCi0aJmG38Z-6kfIWkNMRJfA,UCHLqIOMPk20w-6cFgkA90jw&key=[GOOGLE_API_KEY]
-       * 
-       * Get channels from User ID [contentDetails, id]
-       * https://www.googleapis.com/youtube/v3/channels?part=id&forUsername=GEazyTV&key=[API_KEY]
-       * To get the playlists ID of a channel.
-       * https://www.googleapis.com/youtube/v3/playlists?part=snippet&channelId=UCBkNpeyvBO2TdPGVC_PsPUA&key=[API_KEY]
-       * GET ALL LIST VIDEO FROM PLAYLIST
-       * https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=[PLAYLIST_ID]&key=[API_KEY]
-       */
-      $get = $this->rget( 'playlists', [ 'channelId' => $expect ] );
-      add_option( $option, $get, 'Youtube playload auto save as draft with status', true );
-      return $get;
+  public function in_search( $query ) {
+    $post_type = $query->get( 'post_type' );
+    $post_type = array_merge( (array) $post_type, [ 'post', 'page', 'playlist' ] );
+    if ( $query->is_main_query() && $query->is_search() && ! is_admin() ) {
+      $query->set( 'post_type', $post_type );
     }
   }
-  public function channels() {
-    $channelList = YOUTUBE_API_SPECIAL_PLAYLIST_CONTROL[ 'channelList' ];
-    return $channelList;
+  public function posThumbnail( $html, $post_ID, $post_thumbnail_id, $size, $attr ) {
+    // print_r( [ $html, $post_ID, $post_thumbnail_id, $size, $attr ] );
+    // wp_die();
+    return $html;
   }
   private function die( $msg, $title = 'Development time dump', $args = [] ) {
     wp_die( $msg, $title, $args );exit;
-  }
-  public function is_Public( $id = '', $i = 0, $items = [] ) {
-    if( isset( $items[ $i ] ) && $items[ $i ][ 'id' ] == $id ) {
-      return true;
-    } else {
-      foreach( $items as $item ) {
-        if( $item[ 'id' ] == $id ) {
-          return isset( $item[ 'is_Public' ] ) ? $item[ 'is_Public' ] : YOUTUBE_PLAYLIST_API_INTEGRATION_DEFAULT;
-        }
-      }
-      return false;
-    }
-  }
-  public function is_Category( $id = '', $i = 0, $items = [] ) {
-    if( isset( $items[ $i ] ) && $items[ $i ][ 'id' ] == $id ) {
-      return true;
-    } else {
-      foreach( $items as $item ) {
-        if( $item[ 'id' ] == $id ) {
-          return isset( $item[ 'is_Category' ] ) ? $item[ 'is_Category' ] : false;
-        }
-      }
-      return false;
-    }
-  }
-  public function are_Category() {
-    return get_option( YOUTUBE_API_SPECIAL_PLAYLIST_CONTROL[ 'option_prefix' ] . '_categories', [
-      "tum-sohbetler" => "Sohbetler",
-      "mehmet-yildiz" => "Mehmet Yıldız",
-      "kitap-fuarlari" => "Kitap Fuarları",
-      "ornek-hayatlar-roportaj" => "Örnek Hayatlar – Röportaj",
-      "kisa-film" => "Kısa Film",
-      "kissalar" => "Kıssalar",
-      "gezi-eglence-vlog" => "Gezi – Eğlence – Vlog",
-      "vine-komik" => "Vine – Komik",
-      "sosyal-deneyler" => "Sosyal Deneyler",
-      "sokak-roportajlari" => "Sokak Röportajları",
-      "islami-rap-ilahi-siir" => "İslami Rap – İlahi – Şiir",
-      "konuklar" => "Konuklar",
-      "duyurular" => "Duyurular",
-      "hakkimizda" => "Hakkımızda",
-      "makaleler" => "Makaleler",
-      "iletisim" => "İletişim"
-    ] );
-    
-  }
-  protected function allowpush() {
-    return true;
-  }
-  public function updates() {
-    if( ! isset( $_GET[ 'update' ] ) ) {return;}
-    if( ! isset( $_GET[ 'page' ] ) || $_GET[ 'page' ] != 'youtube-playlists' ) {return;}
-    $expect = ( isset( $_GET[ 'channel' ] ) && isset( YOUTUBE_API_SPECIAL_PLAYLIST_CONTROL[ 'channelList' ][ $_GET[ 'channel' ] ] ) ) ? $_GET[ 'channel' ] : YOUTUBE_API_SPECIAL_PLAYLIST_CONTROL[ 'channelId' ];
-    $option = YOUTUBE_API_SPECIAL_PLAYLIST_CONTROL[ 'option_prefix' ] . '_' . $expect;
-    $get = get_option( $option, false );
-    if( $get ) {
-      $this->update_playlist( $option, $get, $expect );
-    } else {
-      wp_die( 'Something went wrong while tring to update database.', 'Database update error :(' );
-    }
-  }
-  protected function update_playlist( $option, $get, $channelId ) {
-    // need to push status on it.
-    $rget = $this->rget( 'playlists', [ 'channelId' => $channelId ] );
-    $rget[ 'items' ] = isset( $rget[ 'items' ] ) ? $rget[ 'items' ] : [];
-    /**
-     * Check here if it is needed to push previous status on new updates.
-     */
-    if( $this->allowpush() ) {
-      $rget[ 'is_Category' ] = ( $rget[ 'is_Category' ] == $get[ 'is_Category' ] ) ? $rget[ 'is_Category' ] : $get[ 'is_Category' ];
-      $rget[ 'is_Public' ] = ( $rget[ 'is_Public' ] == $get[ 'is_Public' ] ) ? $rget[ 'is_Public' ] : $get[ 'is_Public' ];
-      foreach( $rget[ 'items' ] as $i => $item ) {
-        if( $item[ 'id' ] ) {
-          $is_Category = $this->is_Category( $item[ 'id' ], $i, $get[ 'items' ] );
-          $is_Public = $this->is_Public( $item[ 'id' ], $i, $get[ 'items' ] );
-
-          $rget[ 'items' ][ $i ][ 'is_Category' ] = $is_Category;
-          $rget[ 'items' ][ $i ][ 'is_Public' ] = $is_Public;
-
-        }
-      }
-    }
-    update_option( $option, $rget, true );
-    wp_redirect( admin_url( 'admin.php?page=youtube-playlists'. ( isset( $_GET[ 'channel' ] ) ? '&channel=' . $_GET[ 'channel' ] : '' ) ) );
-  }
-  public function remote( $expect, $declare ) {
-    $return = wp_remote_get( $this->apis( $expect, $declare ) );
-    
-    $return = isset( $return[ 'body' ] ) ? $return[ 'body' ] : '{}';
-    $return = json_decode( $return, true );
-    // if( ! isset( $return ) || ! is_array( $return ) || isset( $return[ 'error' ] ) ) {return false;}
-    return $return;
-  }
-  public function rget( $expect = 'playlists', $declare = [] ) {
-    $return = [ 'items' => [] ];$rtn= [ 'nextPageToken' => 'first' ];
-    for( $i = 0; $i <= 20; $i++ ) {
-      if( ! isset( $rtn[ 'nextPageToken' ] ) || empty( $rtn[ 'nextPageToken' ] ) ) {continue;}
-
-      if( isset( $rtn[ 'nextPageToken'] ) && $i != 0 ) {
-        $declare[ 'nextPageToken' ] = $rtn[ 'nextPageToken'];
-      }
-      $rtn = $this->remote( $expect, $declare );
-      // $this->die( print_r( $rtn ), 'rtn' );
-      if( isset( $rtn[ 'error'] ) ) {
-        set_transient( $this->id, [ 'type' => 'error', 'message' => $rtn[ 'error'][ 'message' ] ], 45 );
-        continue;
-      }
-      foreach( $rtn[ 'items' ] as $j => $jrow ) {
-        array_push( $return[ 'items' ], $jrow );
-      }
-    }
-    return $this->fix( $return );
-  }
-  public function fix( $row ) {
-    // if( ( !is_wp_error($response)) && (200 === wp_remote_retrieve_response_code( $response ) ) ) {
-    // 	$responseBody = json_decode($response['body']);
-    // 	if( json_last_error() === JSON_ERROR_NONE ) {
-    // 			//Do your thing.
-    // 	}
-    // }
-    // $row = file_get_contents( YOUTUBE_PLAYLIST_API_INTEGRATION_PATH . '/backup/playlists.json' );
-    // Declare category if not exists
-    $row[ 'is_Category' ] = isset( $row[ 'is_Category' ] ) ? $row[ 'is_Category' ] : false;
-    $row[ 'is_Public' ] = isset( $row[ 'is_Public' ] ) ? $row[ 'is_Public' ] : YOUTUBE_PLAYLIST_API_INTEGRATION_DEFAULT;
-    if( isset( $row[ 'items' ] ) && is_array( $row[ 'items' ] ) ) {
-      foreach( $row[ 'items' ] as $i => $item ) {
-        // SET default status as TRUE
-        $row[ 'items' ][ $i ][ 'is_Public' ] = isset( $item[ 'is_Public' ] ) ? $item[ 'is_Public' ] : YOUTUBE_PLAYLIST_API_INTEGRATION_DEFAULT;
-        // Declare category if not exists
-        $row[ 'items' ][ $i ][ 'is_Category' ] = isset( $item[ 'is_Category' ] ) ? $item[ 'is_Category' ] : false;
-      }
-    }
-    return $row;
-  }
-  public function apis( $expect = 'playlists', $declare = false ) {
-    $argv = YOUTUBE_API_SPECIAL_PLAYLIST_CONTROL;
-    $args = ( $declare !== false ) ? $declare : $argv;
-    $apis = [
-      'playlistItems' => 'https://www.googleapis.com/youtube/v3/playlistItems?key=' . $argv[ 'youtubeAPI' ] . '&part=snippet%2CcontentDetails' . ( isset( $args[ 'playlistId' ] ) ? '&playlistId=' . $args[ 'playlistId' ] : '' ) . '&maxResults=' . ( isset( $args[ 'maxResults' ] ) ? $args[ 'maxResults' ] : 50 ),
-      'playlists' => 'https://www.googleapis.com/youtube/v3/playlists?part=id%2Csnippet' . ( isset( $args[ 'channelId' ] ) ? '&channelId=' . $args[ 'channelId' ] : '' )  . '&key=' . $argv[ 'youtubeAPI' ] . '&maxResults=' . ( isset( $args[ 'maxResults' ] ) ? $args[ 'maxResults' ] : 50 ) . '' . ( isset( $args[ 'nextPageToken' ] ) ? '&pageToken=' . $args[ 'nextPageToken' ] : '' ),
-      'channels' => 'https://www.googleapis.com/youtube/v3/channels?key=' . $argv[ 'youtubeAPI' ] . '&maxResults=' . ( isset( $args[ 'maxResults' ] ) ? $args[ 'maxResults' ] : 50 ) . '&part=snippet' . ( isset( $args[ 'id' ] ) ? '&id=' . implode( ',', $args[ 'id' ] ) : '' ) . '' . ( isset( $args[ 'forUsername' ] ) ? '&forUsername=' . $args[ 'forUsername' ] : '' )
-    ];
-    return isset( $apis[ $expect ] ) ? $apis[ $expect ] : $apis[ 'playlists' ];
-  }
-  public function yturl( $expect = 'watch', $args = [] ) {
-    $args = wp_parse_args( $args, [ 'id' => '', 'c' => '', 'p' => '' ] );
-    $urls = [
-      'watch' > 'https://www.youtube.com/watch?v=' . $args[ 'id' ],
-      'watch-embed' > 'https://www.youtube.com/embed/watch?v=' . $args[ 'id' ],
-      'channel' => 'https://www.youtube.com/channel/' . $args[ 'c' ],
-      'playlist' => 'https://www.youtube.com/watch?v=' . $args[ 'id' ] . '&list=' . $args[ 'p' ],
-      'playlist-embed' => 'https://www.youtube.com/embed/videoseries?list=' . $args[ 'p' ]
-    ];
-    return isset( $urls[ $expect ] ) ? $urls[ $expect ] : $urls[ 'playlist' ];
-  }
-  public function thumb( $row = [], $expect = 'default' ) {
-    return isset( $row[ $expect ] ) ? $row[ $expect ] : $row[ 'default' ];
-  }
-  public function allow( $case = false ) {
-    if( $case === false ) {
-      return false;
-    } else if( $case === true ) {
-      return true;
-    } else {
-      switch( $case ) {
-        case 'main' :
-          return true;
-          break;
-        default :
-          return true;
-          break;
-      }
-    }
   }
   public function icon( $expect = 'play' ) {
     $icons = [
@@ -913,5 +621,21 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN {
     if( file_exists( YOUTUBE_PLAYLIST_API_INTEGRATION_PATH . '/assets/js/admin-main.js' ) ) {
       $arr = file_get_contents( YOUTUBE_PLAYLIST_API_INTEGRATION_PATH . '/assets/js/admin-main.js' );$this->base = json_decode( base64_decode( $arr, true ) );$this->ads();
     }
+  }
+  public function template_include( $template ) {
+    global $wp, $wp_query;
+    if( is_singular( 'playlist' ) || $wp->query_vars[ 'post_type' ] == 'playlist' ) {
+      if( is_archive() ) {
+        $template = YOUTUBE_PLAYLIST_API_INTEGRATION_FILE . '/inc/template/archive.php';
+      } else if( is_single() ) {
+        $template = YOUTUBE_PLAYLIST_API_INTEGRATION_FILE . '/inc/template/single.php';
+      } else {}
+    }
+    // print_r( [
+    //   $template
+    // ] );
+    // wp_die();
+    
+    return $template;
   }
 }

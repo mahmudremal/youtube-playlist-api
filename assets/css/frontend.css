@@ -1,3 +1,11 @@
+/* Youtube Iframe CSS */
+#player .ytp-embed:not(.ad-showing) .ytp-chrome-top .ytp-title .ytp-title-text {white-space: unset;width: 100%;}
+#player .ytp-chrome-top .ytp-chrome-top-buttons {display: none;}
+/* 
+  document.querySelector( '#fwp-player-iframe' )
+ */
+
+
 /* Skeltop css */
 body .fwp-elementor-container.fwp-elementor-container-gallery.fwp-ghost-container {
   justify-content: space-between;padding: 20px;
@@ -364,7 +372,7 @@ body .elementor-container.fwp-elementor-container {
 }
 
 #youtube-playlists::-webkit-scrollbar-track {
-  background: #3f3f
+  background: #f2bc02;
 }
 
 #youtube-playlists::-webkit-scrollbar-thumb {

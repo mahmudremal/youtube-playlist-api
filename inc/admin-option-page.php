@@ -10,6 +10,7 @@
  * @version		1.3.6
  */
 defined( 'ABSPATH' ) || exit;
+global $SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN_CLS;
 
 $channelList = $this->channels();
 $currentChannel = ( isset( $_GET[ 'channel' ] ) && isset( $channelList[ $_GET[ 'channel' ] ] ) ) ? $_GET[ 'channel' ] : YOUTUBE_API_SPECIAL_PLAYLIST_CONTROL[ 'channelId' ];
@@ -19,9 +20,12 @@ $are_Category = $this->are_Category();
 $playlists[ 'items' ] = isset( $playlists[ 'items' ] ) ? $playlists[ 'items' ] : [];
 $channelTitle = ( isset( $playlists[ 'items' ][ 0 ] ) && isset( $playlists[ 'items' ][ 0 ][ 'snippet' ] ) && isset( $playlists[ 'items' ][ 0 ][ 'snippet' ][ 'channelTitle' ] ) ) ? $playlists[ 'items' ][ 0 ][ 'snippet' ][ 'channelTitle' ] : 'Global Control';
 $channelId = ( isset( $playlists[ 'items' ][ 0 ] ) && isset( $playlists[ 'items' ][ 0 ][ 'snippet' ] ) && isset( $playlists[ 'items' ][ 0 ][ 'snippet' ][ 'channelId' ] ) ) ? $playlists[ 'items' ][ 0 ][ 'snippet' ][ 'channelId' ] : false;
+
+
+// $this->toPost( $playlists );
 ?>
 
-<pre style="display: none;"><?php print_r( $playlists ); ?></pre>
+<pre style="display: none;"><?php $this->toPost( $playlists );// print_r( $playlists ); ?></pre>
 
 <div class="template__wrapper background__greyBg px30 py50">
 	<div class="fwp-admin-setting-tabs">
@@ -75,17 +79,17 @@ $channelId = ( isset( $playlists[ 'items' ][ 0 ] ) && isset( $playlists[ 'items'
 							<?php
 							foreach( $playlists[ 'items' ] as $i => $item ) :
 							$snippet = $item[ 'snippet' ];
-							$thumb = $this->thumb( $snippet[ 'thumbnails' ], 'medium' );
+							$thumb = $SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN_CLS->thumb( $snippet[ 'thumbnails' ], 'medium' );
 							?>
 							<div class="fwp-element__item ">
-								<a href="<?php echo esc_url( $this->yturl( 'playlist', [ 'id' => $item[ 'id' ] ] ) ); ?>" class="element-link" target="_blank" data-embed="<?php echo esc_url( $this->yturl( 'playlist-embed', [ 'p' => $item[ 'id' ] ] ) ); ?>">
+								<a href="<?php echo esc_url( $SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN_CLS->yturl( 'playlist', [ 'id' => $item[ 'id' ] ] ) ); ?>" class="element-link" target="_blank" data-embed="<?php echo esc_url( $SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN_CLS->yturl( 'playlist-embed', [ 'p' => $item[ 'id' ] ] ) ); ?>">
 									<img class="element-image" src="<?php echo esc_url( $thumb[ 'url'] ); ?>" alt="<?php echo esc_attr( 'Bilinmeyen Günahlar' ); ?>" height="<?php echo esc_attr( $thumb[ 'height'] ); ?>" width="<?php echo esc_attr( $thumb[ 'width'] ); ?>">
 								</a>
 								<div class="element__content">
 									<h4><?php echo esc_html( substr( $snippet[ 'title' ], 0, 45 ) ); ?></h4>
 									<div class="element__options">
 										<?php if( 1 == 1 || isset( $snippet[ 'description' ] ) && ! empty( $snippet[ 'description' ] ) ) : ?>
-										<div class="element__icon" href="javascript:void(0)" data-href="<?php echo esc_url( $this->yturl( 'playlist', [ 'p' => $item[ 'id' ] ] ) ); ?>">
+										<div class="element__icon" href="javascript:void(0)" data-href="<?php echo esc_url( $SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN_CLS->yturl( 'playlist', [ 'p' => $item[ 'id' ] ] ) ); ?>">
 											<i class="ea-admin-icon ic on-monitor dashicons-before dashicons-lightbulb"></i>
 											<div class="tooltip-text">
 												<div class="tooltip-header">
@@ -97,7 +101,7 @@ $channelId = ( isset( $playlists[ 'items' ][ 0 ] ) && isset( $playlists[ 'items'
 														</select>
 													<?php endif; ?>
 													<i class="ea-admin-icon dashicons-before dashicons-clipboard" data-clipboard="<?php echo esc_attr( $item[ 'id' ] ); ?>"></i>
-													<a href="<?php echo esc_url( $this->yturl( 'watch', [ 'p' => $item[ 'id' ] ] ) ); ?>" class="tootip-link" target="_blank"><i class="dashicons-before dashicons-admin-links"></i></a>
+													<a href="<?php echo esc_url( $SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN_CLS->yturl( 'watch', [ 'p' => $item[ 'id' ] ] ) ); ?>" class="tootip-link" target="_blank"><i class="dashicons-before dashicons-admin-links"></i></a>
 												</div>
 												<div class="tooltip-body">
 													<?php echo esc_html( ( isset( $snippet[ 'description' ] ) && ! empty( $snippet[ 'description' ] ) && ! is_array( $snippet[ 'description' ] ) ) ? substr( $snippet[ 'description' ], 0, 120 ) : __( 'Descriptions Not available.', 'youtube-playlist-api-integration' ) ); ?>

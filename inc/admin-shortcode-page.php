@@ -82,7 +82,7 @@ foreach( $playlists as $i => $list ) {
         <?php foreach( $playlists as $id => $title ) : ?>
         <div class="p30">
           <div class="fwp-grid">
-            <div class="fwp-col-md-5">
+            <div class="fwp-col-md-5" style="align-self: center;">
               <div class="fwp-tool__card fwp-tool__card--flex">
                 <div class="content">
                   <h4><?php echo esc_html( $title ); ?></h4>
