@@ -94,22 +94,6 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN_ADMIN {
     if( $get ) {
       return $get;
     } else {
-      /**
-       * Channel name	: hayalhanem
-       * Channel ID		: 
-       * Api KEY			: [GOOGLE_API_KEY]
-       * 
-       * Full documentation are here
-       * https://developers-dot-devsite-v2-prod.appspot.com/youtube/v3/docs/channels/list
-       * https://www.googleapis.com/youtube/v3/channels?maxResults=50&part=snippet&id=UCXs8nFqUPQaJZxAt1b3Wblw,UCDESSC7DwGTi8PW16UOlPgA,UCBUJipGCEK09A8qlI6PkS4Q,UCqSD4S5QdupSlDIkiBCgP8g,UCi0aJmG38Z-6kfIWkNMRJfA,UCHLqIOMPk20w-6cFgkA90jw&key=[GOOGLE_API_KEY]
-       * 
-       * Get channels from User ID [contentDetails, id]
-       * https://www.googleapis.com/youtube/v3/channels?part=id&forUsername=GEazyTV&key=[API_KEY]
-       * To get the playlists ID of a channel.
-       * https://www.googleapis.com/youtube/v3/playlists?part=snippet&channelId=UCBkNpeyvBO2TdPGVC_PsPUA&key=[API_KEY]
-       * GET ALL LIST VIDEO FROM PLAYLIST
-       * https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=[PLAYLIST_ID]&key=[API_KEY]
-       */
       $get = $this->rget( 'playlists', [ 'channelId' => $expect ] );
       add_option( $option, $get, 'Youtube playload auto save as draft with status', true );
       return $get;
@@ -410,8 +394,9 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN_ADMIN {
   }
   public function toPost( $args = [] ) {
     if( ! isset( $_GET[ 'ondev' ] ) ) {return;}
-    $this->playListPost( $args );
-    // wp_die();
+    // $this->playListPost( $args );
+    $this->playlistItems( $args );
+    wp_die();
     wp_safe_redirect( admin_url( 'admin.php?page=youtube-playlists' ) );
   }
   private function playListPost( $args = [] ) {
@@ -451,6 +436,53 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN_ADMIN {
           $this->featuredImage( $post_id, $item );
         } else {
           // Already exists
+        }
+      }
+    }
+  }
+  private function playlistItems( $args = [] ) {
+    $items = isset( $args[ 'items' ] ) ? $args[ 'items' ] : [];
+    foreach( $items as $item ) {
+      $itemType = isset( $item[ 'kind' ] ) ? explode( '#', $item[ 'kind' ] ) : [];
+      $itemType = isset( $itemType[ 1 ] ) ? $itemType[ 1 ] : false;
+      if( $itemType == 'playlistItem' ) {
+        $parent = get_posts( [
+          'numberposts'   => 1,
+          'post_type'     => 'playlist',
+          'meta_key'      => 'fwp_meta-playlistId',
+          'meta_value'    => $item[ 'snippet' ][ 'playlistId' ],
+        ] );
+        $posts = get_posts( [
+          'numberposts'   => 1,
+          'post_type'     => 'playlist',
+          'meta_key'      => 'fwp_meta-playlistItemId',
+          'meta_value'    => $item[ 'id' ],
+        ] );
+        if( count( $posts ) <= 0 ) {
+          $post_args = [
+            'post_type'  => 'playlist',
+            'post_status'   => 'publish',
+            'post_title'    => wp_strip_all_tags( $item[ 'snippet' ][ 'title' ] ),
+            'post_content'  => $item[ 'snippet' ][ 'description' ],
+            'post_excerpt'  => substr( $item[ 'snippet' ][ 'description' ], 0, 450 ),
+            // 'post_category' => [],
+            'post_parent'   => ( isset( $parent[0] ) && isset( $parent[0]->ID ) ) ? $parent[0]->ID : 0,
+            'meta_input'    => [
+              'fwp_meta-playlistItemId'   => $item[ 'id' ],
+              'fwp_meta-privacyStatus'    => $item[ 'status' ][ 'privacyStatus' ],
+              'fwp_meta-parentPlaylistId' => $item[ 'snippet' ][ 'playlistId' ],
+              'fwp_meta-channelId'        => $item[ 'snippet' ][ 'channelId' ],
+              'fwp_meta-channelTitle'     => $item[ 'snippet' ][ 'channelTitle' ],
+              'fwp_meta-videoId'          => $item[ 'contentDetails' ][ 'videoId' ],
+              'fwp_meta-thumbnails'       => $item[ 'snippet' ][ 'thumbnails' ],
+            ],
+            'post_date'     => date( 'Y-m-d H:i:s', strtotime( $item[ 'snippet' ][ 'publishedAt' ] ) )
+          ];
+          if( isset( $posts[0] ) && isset( $posts[0]->ID ) ) {
+            $post_args[ 'ID' ] = $posts[0]->ID;
+          }
+          $post_id = wp_insert_post( $post_args );
+          $this->featuredImage( $post_id, $item );
         }
       }
     }
@@ -508,52 +540,5 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN_ADMIN {
     // Assign metadata to attachment.
     wp_update_attachment_metadata( $attach_id, $attach_data );
     return $attach_id;
-  }
-  private function playlistItems( $args = [] ) {
-    $items = isset( $args[ 'items' ] ) ? $args[ 'items' ] : [];
-    foreach( $items as $item ) {
-      $itemType = isset( $item[ 'kind' ] ) ? explode( '#', $item[ 'kind' ] ) : [];
-      $itemType = isset( $itemType[ 1 ] ) ? $itemType[ 1 ] : false;
-      if( $itemType == 'playlistItem' ) {
-        $parent = get_posts( [
-          'numberposts'   => 1,
-          'post_type'     => 'playlist',
-          'meta_key'      => 'fwp_meta-playlistId',
-          'meta_value'    => $item[ 'snippet' ][ 'playlistId' ],
-        ] );
-        $posts = get_posts( [
-          'numberposts'   => 1,
-          'post_type'     => 'playlist',
-          'meta_key'      => 'fwp_meta-playlistItemId',
-          'meta_value'    => $item[ 'id' ],
-        ] );
-        if( count( $posts ) <= 0 ) {
-          $post_args = [
-            'post_type'  => 'playlist',
-            'post_status'   => 'publish',
-            'post_title'    => wp_strip_all_tags( $item[ 'snippet' ][ 'title' ] ),
-            'post_content'  => $item[ 'snippet' ][ 'description' ],
-            'post_excerpt'  => substr( $item[ 'snippet' ][ 'description' ], 0, 450 ),
-            // 'post_category' => [],
-            'post_parent'   => ( isset( $parent[0] ) && isset( $parent[0]->ID ) ) ? $parent[0]->ID : 0,
-            'meta_input'    => [
-              'fwp_meta-playlistItemId'   => $item[ 'id' ],
-              'fwp_meta-privacyStatus'    => $item[ 'status' ][ 'privacyStatus' ],
-              'fwp_meta-parentPlaylistId' => $item[ 'snippet' ][ 'playlistId' ],
-              'fwp_meta-channelId'        => $item[ 'snippet' ][ 'channelId' ],
-              'fwp_meta-channelTitle'     => $item[ 'snippet' ][ 'channelTitle' ],
-              'fwp_meta-videoId'          => $item[ 'contentDetails' ][ 'videoId' ],
-              'fwp_meta-thumbnails'       => $item[ 'snippet' ][ 'thumbnails' ],
-            ],
-            'post_date'     => date( 'Y-m-d H:i:s', strtotime( $item[ 'snippet' ][ 'publishedAt' ] ) )
-          ];
-          if( isset( $posts[0] ) && isset( $posts[0]->ID ) ) {
-            $post_args[ 'ID' ] = $posts[0]->ID;
-          }
-          $post_id = wp_insert_post( $post_args );
-          $this->featuredImage( $post_id, $item );
-        }
-      }
-    }
   }
 }

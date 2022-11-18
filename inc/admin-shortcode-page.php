@@ -15,6 +15,7 @@ $settings = get_option( YOUTUBE_API_SPECIAL_PLAYLIST_CONTROL[ 'option_prefix' ] 
 $playlists = isset( $settings[ 'playlists' ] ) ? $settings[ 'playlists' ] : [];
 $youtubeapi = isset( $settings[ 'youtubeapi' ] ) ? $settings[ 'youtubeapi' ] : '';
 $lists = [];
+
 foreach( $playlists as $i => $list ) {
   $lists[] = $i;
 }

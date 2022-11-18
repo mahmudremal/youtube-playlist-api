@@ -8,6 +8,8 @@
  * @copyright	Copyright (c) 2022-23
  * @link		https://futurewordpress.com/
  * @version		1.3.6
+ * FTP directory
+ * /wp-content/plugins/youtube-playlist-api
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -227,7 +229,7 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN {
 		return implode( ' ', $class );
 	}
   
-  private function ajaxSort( $get ) {
+  public function ajaxSort( $get ) {
     // Temporary don't like to filter.
     // return $get;
     if( ! $get[ 'is_Public' ] ) {return [];}
@@ -548,9 +550,9 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN {
         'page-attributes',
         'custom-fields',
       ],
-      'taxonomies' => [ 'uncategorized' ],
+      'taxonomies' => [  ],
       // 'register_meta_box_cb' => 'custom_post_type_meta_box',
-      'rewrite' => [ 'slug' => 'playlists' ],
+      // 'rewrite' => [ 'slug' => 'playlists' ],
       'show_in_rest' => true,
       'rest_base' => 'playlists',
       'hierarchical' => false,
@@ -562,7 +564,7 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN {
       'show_in_nav_menus' => true,
       'can_export' => true,
       'has_archive' => false,
-      'exclude_from_search' => true,
+      'exclude_from_search' => false,
       'publicly_queryable' => true,
       'capability_type' => 'page',
     );
@@ -581,6 +583,7 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN {
     );
   }
   public function in_search( $query ) {
+    return;
     $post_type = $query->get( 'post_type' );
     $post_type = array_merge( (array) $post_type, [ 'post', 'page', 'playlist' ] );
     if ( $query->is_main_query() && $query->is_search() && ! is_admin() ) {
@@ -623,18 +626,14 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN {
     }
   }
   public function template_include( $template ) {
-    global $wp, $wp_query;
-    if( is_singular( 'playlist' ) || $wp->query_vars[ 'post_type' ] == 'playlist' ) {
-      if( is_archive() ) {
-        $template = YOUTUBE_PLAYLIST_API_INTEGRATION_FILE . '/inc/template/archive.php';
+    global $wp, $wp_query, $post;
+    if( is_singular( 'playlist' ) || $wp->query_vars[ 'post_type' ] == 'playlist' || get_query_var('post_type') == 'playlist' ) {
+      if( false && is_archive() ) {
+        $template = YOUTUBE_PLAYLIST_API_INTEGRATION_PATH . '/inc/template/archive.php';
       } else if( is_single() ) {
-        $template = YOUTUBE_PLAYLIST_API_INTEGRATION_FILE . '/inc/template/single.php';
+        $template = YOUTUBE_PLAYLIST_API_INTEGRATION_PATH . '/inc/template/single.php';
       } else {}
     }
-    // print_r( [
-    //   $template
-    // ] );
-    // wp_die();
     
     return $template;
   }
