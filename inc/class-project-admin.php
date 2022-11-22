@@ -47,7 +47,7 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN_ADMIN {
     wp_localize_script( 'youtube-playlist-api-integration-js', 'siteConfig', [
 			'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
 			'ajax_nonce' => wp_create_nonce( 'youtube_api_playlist_toggle' ),
-      'confirmUpdate' => 'Are you sure you want to update this playlist?\nFYI, there is possibility to massup playlist sorting order and that is totally happen by Google API, and this update required to control API callback.'
+      'confirmUpdate' => __( "Are you sure you want to update this playlist?\nFYI, there is possibility to massup playlist sorting order and that is totally happen by Google API, and this update required to control API callback.", 'domain' )
 		] );
   }
   public function filemtime( $url ) {
@@ -103,6 +103,18 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN_ADMIN {
     $channelList = YOUTUBE_API_SPECIAL_PLAYLIST_CONTROL[ 'channelList' ];
     return $channelList;
   }
+  protected function update_playlistItems( $args ) {
+    $haveToUpdateOption = YOUTUBE_API_SPECIAL_PLAYLIST_CONTROL[ 'option_prefix' ] . '_haveToUpdate';
+    $haveToUpdate = get_option( $haveToUpdateOption, [] );
+    $items = isset( $args[ 'items' ] ) ? $args[ 'items' ] : [];
+    // Update playlists
+    foreach( $items as $i => $item ) {
+      $haveToUpdate[] = $item[ 'id' ];
+      // $option = YOUTUBE_API_SPECIAL_PLAYLIST_CONTROL[ 'option_prefix' ] . '_playlistItems_' . $item[ 'id' ];
+      // $this->forward( $option, $item[ 'id' ], false );
+    }
+    update_option( $haveToUpdateOption, true , false );
+  }
   protected function update_playlist( $option, $get, $channelId ) {
     // need to push status on it.
     $rget = $this->rget( 'playlists', [ 'channelId' => $channelId ] );
@@ -125,6 +137,11 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN_ADMIN {
       }
     }
     update_option( $option, $rget, true );
+    $done = $this->toPost( $rget );
+    $done = $this->update_playlistItems( $rget );
+
+    // print_r( $rget );wp_die();
+
     wp_redirect( admin_url( 'admin.php?page=youtube-playlists'. ( isset( $_GET[ 'channel' ] ) ? '&channel=' . $_GET[ 'channel' ] : '' ) ) );
   }
   public function remote( $expect, $declare ) {
@@ -354,6 +371,7 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN_ADMIN {
     $expect = ( isset( $_GET[ 'channel' ] ) && isset( YOUTUBE_API_SPECIAL_PLAYLIST_CONTROL[ 'channelList' ][ $_GET[ 'channel' ] ] ) ) ? $_GET[ 'channel' ] : YOUTUBE_API_SPECIAL_PLAYLIST_CONTROL[ 'channelId' ];
     $option = YOUTUBE_API_SPECIAL_PLAYLIST_CONTROL[ 'option_prefix' ] . '_' . $expect;
     $get = get_option( $option, false );
+    
     if( $get ) {
       $this->update_playlist( $option, $get, $expect );
     } else {
@@ -361,45 +379,41 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN_ADMIN {
     }
   }
   
-  private function onUpdate( $get ) {
-    return false;
-    /**
-     * Update on Date.
-     */
-    $on_Local = date_create( $get[ 'on_Local' ] );$today = date_create( 'now' );
-    $diff = date_diff( $on_Local, $today, true );
-    // Update on everyday ( date >= 1 )
-    if( $diff && $diff->format('%a' ) >= 1 ) {
-      return true;
-    } else {
-      // $this->die( $diff->format('%a' ) );
-      return false;
-    }
-  }
   private function forward( $option, $expect, $on ) {
     $remote = $this->rget( 'playlistItems', [ 'playlistId' => $expect ] );
     
     $remote[ 'on_Local' ] = date( 'd/m/Y' );
     $msg = get_transient( $this->id );
     if( $msg && isset( $msg[ 'type' ] ) && $msg[ 'type' ] == 'error' ) {
-      wp_send_json_error( isset( $msg[ 'message' ] ) ? $msg[ 'message' ] : __( 'Something went wrong while tring to update database. Database update error :(', 'youtube-playlist-api-integration' ) );
+      return $msg;
     } else {
-      if( $on = 'add' ) {
-        add_option( $option, $remote );
-      } else {
+      if( get_option( $option, false ) ) {
         update_option( $option, $remote );
+      } else {
+        add_option( $option, $remote );
       }
-      wp_send_json_success( $SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN_CLS->ajaxSort( $remote ), 200 );
+      return true;
     }
   }
-  public function toPost( $args = [] ) {
-    if( ! isset( $_GET[ 'ondev' ] ) ) {return;}
-    // $this->playListPost( $args );
-    $this->playlistItems( $args );
-    wp_die();
-    wp_safe_redirect( admin_url( 'admin.php?page=youtube-playlists' ) );
+  private function toPostAll() {
+    $settings = get_option( YOUTUBE_API_SPECIAL_PLAYLIST_CONTROL[ 'option_prefix' ] . '_settings', [ 'playlists' => [] ] );
+    foreach( $settings[ 'playlists' ] as $id => $title ) {
+      $playlists = $this->playlists( $id );
+      $this->toPost( $playlists );
+      // print_r( $playlists );
+    }
+    // wp_die($settings);
   }
-  private function playListPost( $args = [] ) {
+  private function toPost( $args = [], $return = false ) {
+    // if( ! isset( $_GET[ 'ondev' ] ) ) {return;}
+    $this->playListPost( $args );
+    // $this->playlistItems( $args );
+    // wp_safe_redirect( admin_url( 'admin.php?page=youtube-playlists' ) );
+    if( $return ) {
+      return true;
+    }
+  }
+  private function playListPost( $args = [] ) {    
     $items = isset( $args[ 'items' ] ) ? $args[ 'items' ] : [];
     foreach( $items as $item ) {
       $itemType = isset( $item[ 'kind' ] ) ? explode( '#', $item[ 'kind' ] ) : [];

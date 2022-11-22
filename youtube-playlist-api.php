@@ -30,10 +30,10 @@ defined( 'YOUTUBE_PLAYLIST_API_INTEGRATION_ASSETS' ) || define( 'YOUTUBE_PLAYLIS
 
 
 defined( 'YOUTUBE_API_SPECIAL_PLAYLIST_CONTROL_PREV' ) || define( 'YOUTUBE_API_SPECIAL_PLAYLIST_CONTROL_PREV', [
-  'youtubeAPI' => 'AIzaSyAk_sfoVdJ6CbBIAezTlh-1AtWgsVCErCs',
-  'channelList' => [ 'UCXs8nFqUPQaJZxAt1b3Wblw' ],
-  'channelId' => 'UCXs8nFqUPQaJZxAt1b3Wblw',
-  'playlistId' => 'PLIbMQVUKxl0RxL32wsPzqaGoxi414XhGu',
+  'youtubeAPI' => 'AIzaSyB73bFcLnCmDMr09XxNX1qjfRfRM8qjW78',
+  'channelList' => [ 'UCaDpCyQiDfjLJ5jTmzZz7ZA' ],
+  'channelId' => 'UCaDpCyQiDfjLJ5jTmzZz7ZA',
+  'playlistId' => 'UCaDpCyQiDfjLJ5jTmzZz7ZA',
   'pathAPI' => 'https://www.googleapis.com/youtube/v3',
   'forUsername' => 'hayalhanem',
   'option_prefix' => 'fwp_yt_playlist'
@@ -57,10 +57,10 @@ include_once YOUTUBE_PLAYLIST_API_INTEGRATION_PATH . '/inc/class-youtube-project
 global $SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN_CLS;
 $SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN_CLS = SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN::instance();
 $SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN_CLS->init();
-if( is_admin() ) {
+// if( is_admin() ) {
   include_once YOUTUBE_PLAYLIST_API_INTEGRATION_PATH . '/inc/class-project-admin.php';
   $SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN_ADMIN = SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN_ADMIN::instance();$SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN_ADMIN->init();
-}
+// }
 
 // include_once YOUTUBE_PLAYLIST_API_INTEGRATION_PATH . '/elementor/elementor-register-widget.php';
 ?>

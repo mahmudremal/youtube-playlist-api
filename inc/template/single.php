@@ -12,29 +12,29 @@
 
 defined( 'ABSPATH' ) || exit;
 get_header();
-$postMeta = [];$playlistItems = [];
+$postMeta = [];$playlistItems = [];$hasPlaylistItems = false;
 $metaData = get_post_meta( get_the_ID(), false, true );
 foreach( $metaData as $key => $meta ) {
   $postMeta[ str_replace( [ 'fwp_meta-' ], [ '' ], $key ) ] = isset( $meta[0] ) ? $meta[0] : $meta;
 }
 $postMeta[ 'localized' ] = isset( $postMeta[ 'localized' ] ) ? maybe_unserialize( $postMeta[ 'localized' ] ) : [];
 $postMeta[ 'thumbnails' ] = isset( $postMeta[ 'thumbnails' ] ) ? maybe_unserialize( $postMeta[ 'thumbnails' ] ) : [];
-// if( isset( $postMeta[ 'playlistId' ] ) && ! empty( $postMeta[ 'playlistId' ] ) ) {
-//   $option = YOUTUBE_API_SPECIAL_PLAYLIST_CONTROL[ 'option_prefix' ] . '_playlist_' . $postMeta[ 'playlistId' ];
-//   wp_die( $option );
-//   $playlistItems = $SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN_CLS->ajaxSort( get_option( $option, [] ) );
-//   // $playlistItems = $SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN_CLS->publiclist( [ 'playlistId' => $postMeta[ 'playlistId' ], 'items' => [] ] );
-//   $playlistItems = isset( $playlistItems[ 'items' ] ) ? $playlistItems[ 'items' ] : [];
-// }
+if( $hasPlaylistItems && isset( $postMeta[ 'playlistId' ] ) && ! empty( $postMeta[ 'playlistId' ] ) ) {
+  $option = YOUTUBE_API_SPECIAL_PLAYLIST_CONTROL[ 'option_prefix' ] . '_playlistItems_' . $postMeta[ 'playlistId' ];
+  wp_die( $option );
+  $playlistItems = $SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN_CLS->ajaxSort( get_option( $option, [] ) );
+  // $playlistItems = $SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN_CLS->publiclist( [ 'playlistId' => $postMeta[ 'playlistId' ], 'items' => [] ] );
+  $playlistItems = isset( $playlistItems[ 'items' ] ) ? $playlistItems[ 'items' ] : [];
+}
 ?>
-<pre style="display: none;"><?php print_r( [ $postMeta, $playlistItems ] ); ?></pre>
+<pre style="display: none;"><?php // print_r( [ $postMeta, $playlistItems ] ); ?></pre>
 <div class="elementor futurewordpress-elementor">
 
 
   <section class="elementor-section elementor-top-section elementor-element elementor-element-main-content elementor-section-boxed elementor-section-height-default elementor-section-height-default" data-element_type="section" data-settings="{&quot;background_background&quot;:&quot;classic&quot;}">
     <div class="elementor-background-overlay"></div>
     <div class="elementor-container elementor-column-gap-default">
-      <div class="elementor-column elementor-col-70 elementor-top-column elementor-element" data-element_type="column">
+      <div class="elementor-column elementor-col-<?php echo esc_attr( ( $hasPlaylistItems ) ? '70' : '100' ); ?> elementor-top-column elementor-element" data-element_type="column">
         <div class="elementor-widget-wrap elementor-element-populated">
           <div class="elementor-element elementor-widget elementor-widget-heading" data-id="786c8ff" data-element_type="widget" data-widget_type="heading.default">
             <div class="elementor-widget-container">
@@ -43,7 +43,7 @@ $postMeta[ 'thumbnails' ] = isset( $postMeta[ 'thumbnails' ] ) ? maybe_unseriali
           </div>
         </div>
       </div>
-      <div class="elementor-column elementor-col-30 elementor-top-column elementor-element" data-element_type="column">
+      <div class="elementor-column elementor-col-<?php echo esc_attr( ( $hasPlaylistItems ) ? '30' : '0' ); ?> elementor-top-column elementor-element" data-element_type="column">
         <div class="elementor-widget-wrap">
           <ul class="fwp-playlist-list-unordered">
             <?php foreach( $playlistItems as $item ) : ?>

@@ -47,7 +47,7 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN {
      * Registering Activation and deactivation Hook
      */
     register_activation_hook( YOUTUBE_PLAYLIST_API_INTEGRATION_FILE, [ $this, 'activate'] );
-    // register_deactivation_hook( YOUTUBE_PLAYLIST_API_INTEGRATION_FILE, [ $this, 'deactivate'] );
+    register_deactivation_hook( YOUTUBE_PLAYLIST_API_INTEGRATION_FILE, [ $this, 'deactivate'] );
     
 
     /**
@@ -160,7 +160,7 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN {
       /**
        * Prevent from sending unauthorized list
        */
-      // if( ! isset( $settings[ 'playlists' ][ $args[ 'channel' ] ] ) ) {return $args;}
+      if( ! isset( $settings[ 'playlists' ][ $args[ 'channel' ] ] ) ) {return $args;}
       $playlists = get_option( YOUTUBE_API_SPECIAL_PLAYLIST_CONTROL[ 'option_prefix' ] . '_' . ( isset( $args[ 'channel' ] ) ? $args[ 'channel' ] : YOUTUBE_API_SPECIAL_PLAYLIST_CONTROL[ 'channelId' ] ), false );
       // $args[ 'mypl' ] = $playlists;
       $is_Public = isset( $playlists[ 'is_Public' ] ) && ( $playlists[ 'is_Public' ] ) ? true : false;
@@ -240,6 +240,96 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN {
     }
     return $return;
   }
+  private function onUpdate( $get ) {
+    return false;
+    /**
+     * Update on Date.
+     */
+    $on_Local = date_create( $get[ 'on_Local' ] );$today = date_create( 'now' );
+    $diff = date_diff( $on_Local, $today, true );
+    // Update on everyday ( date >= 1 )
+    if( $diff && $diff->format('%a' ) >= 1 ) {
+      return true;
+    } else {
+      // $this->die( $diff->format('%a' ) );
+      return false;
+    }
+  }
+  private function forward( $option, $expect, $on ) {
+    $remote = $this->rget( 'playlistItems', [ 'playlistId' => $expect ] );
+    
+    $remote[ 'on_Local' ] = date( 'd/m/Y' );
+    $msg = get_transient( $this->id );
+    if( $msg && isset( $msg[ 'type' ] ) && $msg[ 'type' ] == 'error' ) {
+      wp_send_json_error( isset( $msg[ 'message' ] ) ? $msg[ 'message' ] : __( 'Something went wrong while tring to update database. Database update error :(', 'youtube-playlist-api-integration' ) );
+    } else {
+      if( $on = 'add' ) {
+        add_option( $option, $remote );
+      } else {
+        update_option( $option, $remote );
+      }
+      wp_send_json_success( $this->ajaxSort( $remote ), 200 );
+    }
+  }
+  public function remote( $expect, $declare ) {
+    $return = wp_remote_get( $this->apis( $expect, $declare ) );
+    
+    $return = isset( $return[ 'body' ] ) ? $return[ 'body' ] : '{}';
+    $return = json_decode( $return, true );
+    // if( ! isset( $return ) || ! is_array( $return ) || isset( $return[ 'error' ] ) ) {return false;}
+    return $return;
+  }
+  public function rget( $expect = 'playlists', $declare = [] ) {
+    $return = [ 'items' => [] ];$rtn= [ 'nextPageToken' => 'first' ];
+    for( $i = 0; $i <= 20; $i++ ) {
+      if( ! isset( $rtn[ 'nextPageToken' ] ) || empty( $rtn[ 'nextPageToken' ] ) ) {continue;}
+
+      if( isset( $rtn[ 'nextPageToken'] ) && $i != 0 ) {
+        $declare[ 'nextPageToken' ] = $rtn[ 'nextPageToken'];
+      }
+      $rtn = $this->remote( $expect, $declare );
+      // $this->die( print_r( $rtn ), 'rtn' );
+      if( isset( $rtn[ 'error'] ) ) {
+        set_transient( $this->id, [ 'type' => 'error', 'message' => $rtn[ 'error'][ 'message' ] ], 45 );
+        continue;
+      }
+      foreach( $rtn[ 'items' ] as $j => $jrow ) {
+        array_push( $return[ 'items' ], $jrow );
+      }
+    }
+    return $this->fix( $return );
+  }
+  public function fix( $row ) {
+    // if( ( !is_wp_error($response)) && (200 === wp_remote_retrieve_response_code( $response ) ) ) {
+    // 	$responseBody = json_decode($response['body']);
+    // 	if( json_last_error() === JSON_ERROR_NONE ) {
+    // 			//Do your thing.
+    // 	}
+    // }
+    // $row = file_get_contents( YOUTUBE_PLAYLIST_API_INTEGRATION_PATH . '/backup/playlists.json' );
+    // Declare category if not exists
+    $row[ 'is_Category' ] = isset( $row[ 'is_Category' ] ) ? $row[ 'is_Category' ] : false;
+    $row[ 'is_Public' ] = isset( $row[ 'is_Public' ] ) ? $row[ 'is_Public' ] : YOUTUBE_PLAYLIST_API_INTEGRATION_DEFAULT;
+    if( isset( $row[ 'items' ] ) && is_array( $row[ 'items' ] ) ) {
+      foreach( $row[ 'items' ] as $i => $item ) {
+        // SET default status as TRUE
+        $row[ 'items' ][ $i ][ 'is_Public' ] = isset( $item[ 'is_Public' ] ) ? $item[ 'is_Public' ] : YOUTUBE_PLAYLIST_API_INTEGRATION_DEFAULT;
+        // Declare category if not exists
+        $row[ 'items' ][ $i ][ 'is_Category' ] = isset( $item[ 'is_Category' ] ) ? $item[ 'is_Category' ] : false;
+      }
+    }
+    return $row;
+  }
+  public function apis( $expect = 'playlists', $declare = false ) {
+    $argv = YOUTUBE_API_SPECIAL_PLAYLIST_CONTROL;
+    $args = ( $declare !== false ) ? $declare : $argv;
+    $apis = [
+      'playlistItems' => 'https://www.googleapis.com/youtube/v3/playlistItems?key=' . $argv[ 'youtubeAPI' ] . '&part=snippet%2CcontentDetails' . ( isset( $args[ 'playlistId' ] ) ? '&playlistId=' . $args[ 'playlistId' ] : '' ) . '&maxResults=' . ( isset( $args[ 'maxResults' ] ) ? $args[ 'maxResults' ] : 50 ),
+      'playlists' => 'https://www.googleapis.com/youtube/v3/playlists?part=id%2Csnippet' . ( isset( $args[ 'channelId' ] ) ? '&channelId=' . $args[ 'channelId' ] : '' )  . '&key=' . $argv[ 'youtubeAPI' ] . '&maxResults=' . ( isset( $args[ 'maxResults' ] ) ? $args[ 'maxResults' ] : 50 ) . '' . ( isset( $args[ 'nextPageToken' ] ) ? '&pageToken=' . $args[ 'nextPageToken' ] : '' ),
+      'channels' => 'https://www.googleapis.com/youtube/v3/channels?key=' . $argv[ 'youtubeAPI' ] . '&maxResults=' . ( isset( $args[ 'maxResults' ] ) ? $args[ 'maxResults' ] : 50 ) . '&part=snippet' . ( isset( $args[ 'id' ] ) ? '&id=' . implode( ',', $args[ 'id' ] ) : '' ) . '' . ( isset( $args[ 'forUsername' ] ) ? '&forUsername=' . $args[ 'forUsername' ] : '' )
+    ];
+    return isset( $apis[ $expect ] ) ? $apis[ $expect ] : $apis[ 'playlists' ];
+  }
   public function ajax_playlist() {
     /**
      * Can be filter using nonce: youtube_api_playlist_playlist
@@ -250,13 +340,18 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN {
       wp_send_json_error( __( 'Failed to fetch request!', 'youtube-playlist-api-integration' ) );
     } else {
       $expect = isset( $_GET[ 'playlist' ] ) ? $_GET[ 'playlist' ] : false;
-      $option = YOUTUBE_API_SPECIAL_PLAYLIST_CONTROL[ 'option_prefix' ] . '_playlist_' . $expect;
+      $option = YOUTUBE_API_SPECIAL_PLAYLIST_CONTROL[ 'option_prefix' ] . '_playlistItems_' . $expect;
       $get = get_option( $option, false );
       if( $get ) {
-        wp_send_json_success( $this->ajaxSort( $get ), 200 );
+        if( $this->onUpdate( $get ) ) {
+          $this->forward( $option, $expect, 'update' );
+        } else {
+          wp_send_json_success( $this->ajaxSort( $get ), 200 );
+        }
       } else {
-        wp_send_json_error( __( 'Failed to findout youtube paylist from database. Not exists. Maybe not allowed.', 'youtube-playlist-api-integration' ) );
+        $this->forward( $option, $expect, 'add' );
       }
+      // wp_send_json_error( __( 'Failed to findout youtube paylist from database. Not exists. Maybe not allowed.', 'youtube-playlist-api-integration' ) );
     }
   }
   public function currency( $amount, $currency, $sign = false ) {
@@ -297,6 +392,8 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN {
   public function activate() {
     // get_option( $this->id . '_id_increaser', false ) || add_option( $this->id . '_id_increaser', 1, '', true );
     // get_option( $this->id . '_needs_update', false ) || add_option( $this->id . '_needs_update', 0, '', true );
+    $haveToUpdateOption = YOUTUBE_API_SPECIAL_PLAYLIST_CONTROL[ 'option_prefix' ] . '_haveToUpdate';
+    $haveToUpdate = add_option( $haveToUpdateOption, [] );
   }
   public function deactivate() {
     global $wpdb;

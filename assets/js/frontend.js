@@ -9,6 +9,7 @@
     denaid;
     videoPlayer;
     videoGallery;
+    currentTitle;
 		/**
 		 * Constructor
 		 */
@@ -36,15 +37,13 @@
       this.denaid = false;
       this.videoPlayer = false;
       this.videoGallery = false;
+      this.currentTitle = null;
       this.i18n = {
         serverError: siteConfig?.i18n.serverError ?? 'Error while tring to connect with server. Maybe server internal problem.',
         apiError: siteConfig?.i18n.apiError ?? 'We\'re facing some problem while trying to get playlist from Google server.',
         emptyError: siteConfig?.i18n.emptyError ?? 'There is nothing to show. Maybe List is empty or isn\'t publicly visible.',
       };
       this.init();
-      if( this.settings.listOrder ) {
-        this.sideMenu();
-      }
     }
 		/**
 		 * initialize script
@@ -52,33 +51,45 @@
     init() {
       this.popup();
       // this.click();
+      if( this.settings.listOrder ) {
+        var nav = document.querySelector( '.elementor-widget.elementor-widget-global.elementor-widget-nav-menu .elementor-widget-container nav ul' );
+        this.sideMenu( nav, false);
+        nav = document.querySelectorAll( '.elementor-hidden-desktop .elementor-container .elementor-nav-menu__container.elementor-nav-menu--dropdown .elementor-nav-menu' ), nav = nav[ ( nav.length - 1 ) ];
+        this.sideMenu( nav, true);
+      }
 		}
-    sideMenu() {
+    sideMenu( nav, mobile = false ) {
       const thisClass = this;
       if( ! thisClass.settings.listOrder ) {return;}
-      var nav = document.querySelector( '.elementor-widget.elementor-widget-global.elementor-widget-nav-menu .elementor-widget-container nav ul' ), menus = nav.querySelectorAll( 'li' ), li, ul, h3, a, items, item;
+      var menus = nav.querySelectorAll( 'li' ), li, ul, h3, a, items, item;
       items = document.querySelectorAll( 'body .elementor-container.fwp-elementor-container > .imagehvr-wrapper' );
       ul = document.createElement( 'ul' );
       if( items.length >= 1 ) {
         items.forEach( function( item, i ) {
-          li = document.createElement( 'li' );li.classList.add( 'menu-item', 'menu-item-type-post_type', 'menu-item-object-page' );h3 = document.createElement( 'h3' );
-          a = document.createElement( 'a' );a.classList.add( 'elementor-item', 'fwp-link-click' );a.href = 'javascript:void(0)';a.innerText = item.querySelector( '.imagecaption' ).dataset.title;a.dataset.order = i;a.dataset.embed = item.querySelector( '.imagehvr .imagehvr-content-wrapper .imagehvr-link' ).dataset.embed;a.dataset.id = item.querySelector( '.imagehvr .imagehvr-content-wrapper .imagehvr-link' ).dataset.id;
-          h3.appendChild( a );li.appendChild( h3 );
-          ul.appendChild( li );
+          if( mobile ) {
+            li = document.createElement( 'li' );li.classList.add( 'menu-item', 'menu-item-type-post_type', 'menu-item-object-page' );
+            a = document.createElement( 'a' );a.classList.add( 'elementor-item', 'fwp-link-click' );a.href = 'javascript:void(0)';a.innerText = item.querySelector( '.imagecaption' ).dataset.title;a.dataset.order = i;a.dataset.embed = item.querySelector( '.imagehvr .imagehvr-content-wrapper .imagehvr-link' ).dataset.embed;a.dataset.id = item.querySelector( '.imagehvr .imagehvr-content-wrapper .imagehvr-link' ).dataset.id;a.setAttribute( 'tabindex', 0 );
+            li.appendChild( a );ul.appendChild( li );
+          } else {
+            li = document.createElement( 'li' );li.classList.add( 'menu-item', 'menu-item-type-post_type', 'menu-item-object-page' );h3 = document.createElement( 'h3' );
+            a = document.createElement( 'a' );a.classList.add( 'elementor-item', 'fwp-link-click' );a.href = 'javascript:void(0)';a.innerText = item.querySelector( '.imagecaption' ).dataset.title;a.dataset.order = i;a.dataset.embed = item.querySelector( '.imagehvr .imagehvr-content-wrapper .imagehvr-link' ).dataset.embed;a.dataset.id = item.querySelector( '.imagehvr .imagehvr-content-wrapper .imagehvr-link' ).dataset.id;
+            h3.appendChild( a );li.appendChild( h3 );
+            ul.appendChild( li );
+          }
         } );
         
         if( ul.querySelectorAll( 'li' ).length >= 1 ) {
           nav.innerHTML = ul.innerHTML;
-          thisClass.navClickEvent();
+          thisClass.navClickEvent( nav );
         }
       }
     }
-    navClickEvent() {
-      const thisClass = this;
+    navClickEvent( nav = false ) {
+      const thisClass = this;if( ! nav ) {return;}
       var root = 'body .elementor-container.fwp-elementor-container';
       const playlist = document.querySelectorAll( root + ' > .imagehvr-wrapper' );
       const container = document.querySelectorAll( root );
-      var nav = document.querySelector( '.elementor-widget.elementor-widget-global.elementor-widget-nav-menu .elementor-widget-container nav ul' ), list = nav.querySelectorAll( 'li' ), grid;
+      var list = nav.querySelectorAll( 'li' ), grid;
       list.forEach( function( e ) {
         e.addEventListener( 'click', function( event ) {
           event.preventDefault();
@@ -146,6 +157,11 @@
           // console.log( data.error.code, data.error.message );
           root.classList.remove( 'fwp-ghost-container' );
           thisClass.nothingFound( root, { list: list, grid: grid, type: 'api', error: data.error } );
+        } else if( ! data.success ) {
+          thisClass.denaid = true;
+          // console.log( data.error.code, data.error.message );
+          root.classList.remove( 'fwp-ghost-container' );
+          thisClass.nothingFound( root, { list: list, grid: grid, type: 'request', error: data.data } );
         } else {
           data = ( data.data ) ? data.data : data;
           items = ( data.items) ? data.items : [];
@@ -216,7 +232,7 @@
       container = document.createElement( 'div' );container.classList.add( 'elementor-element', 'elementor-column', 'elementor-inner-column', 'elementor-col-100' );
       img = document.createElement( 'img' );img.src = thisClass.settings.errorImage;
       h3 = document.createElement( 'h3' );container.classList.add( 'fwp-error-image-caption' );h3.innerHTML = title;
-      container.appendChild( img );container.appendChild( div );
+      container.appendChild( img );container.appendChild( h3 );
       root.innerHTML = '';root.appendChild( container );
     }
     handleIframe( list, grid ) {
@@ -280,6 +296,7 @@
 				if( typeof videoUrl === undefined || ! videoUrl ) {return;}
 				if( typeof videoId === undefined || ! videoId ) {return;}
         if( 1 == 1 ) {
+          if( this.parentElement.nextElementSibling.dataset.title ) {thisClass.currentTitle = this.parentElement.nextElementSibling.dataset.title;}
           var popup = '\
           <div class="yt-popup" id="media-youtube-popup" title="Press ESC to close.">\
             <div class="popup-center-content">\
@@ -393,14 +410,18 @@
       } );
     }
     rander( data ) {
+      const thisClass = this;
       var total_results = ( ( data.pageInfo ) && ( data.pageInfo.totalResults ) ) ? data.pageInfo.totalResults : 50;
       var next_page = ( data.nextPageToken ) ? data.nextPageToken : '';var html = '';
+      if( thisClass.currentTitle && thisClass.currentTitle != '' ) {
+        html += '<li class="playlist-title"><h6>' + thisClass.currentTitle + '</h6></li>';
+      }
       $.each( data.items, function( index, item ) {
         var snippet = item.snippet, title = snippet.title, status = ( item.status && item.status.privacyStatus ) ? item.status.privacyStatus : 'public', video_id  = "", thumb_url = "", video_url = "";
         if( status !== "public" ) {return;}
-        if( snippet.thumbnails === undefined ){return;}
-        video_id  = snippet.resourceId.videoId;
-        thumb_url = snippet.thumbnails.medium.url;
+        if( snippet.thumbnails === undefined || snippet.thumbnails.length <= 0 ){return;}
+        video_id  = ( snippet.resourceId) ? snippet.resourceId.videoId : '';
+        thumb_url = ( snippet.thumbnails.medium ) ? snippet.thumbnails.medium.url : '';
         video_url = "https://www.youtube.com/embed/"+video_id;
 
         html += '<li>';
@@ -416,6 +437,11 @@
         $( '#youtube-playlists' ).addClass( 'show' );
         $( '#youtube-playlists li a' ).off( 'click' ).on( 'click',function( e ) {
           e.preventDefault();
+          if( this.getAttribute( 'title' ) && $( '#youtube-playlists li.playlist-title' ).length >= 1 ) {
+            var title = this.getAttribute( 'title' );
+            thisClass.currentTitle = title;
+            $( '#youtube-playlists li.playlist-title h6' ).html( title );
+          }
           $( '#fwp-player-iframe' ).attr( 'src', $( this ).attr( 'href' ) );
         } );
       } else {

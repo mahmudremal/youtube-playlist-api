@@ -21,10 +21,14 @@ $playlists[ 'items' ] = isset( $playlists[ 'items' ] ) ? $playlists[ 'items' ] :
 $channelTitle = ( isset( $playlists[ 'items' ][ 0 ] ) && isset( $playlists[ 'items' ][ 0 ][ 'snippet' ] ) && isset( $playlists[ 'items' ][ 0 ][ 'snippet' ][ 'channelTitle' ] ) ) ? $playlists[ 'items' ][ 0 ][ 'snippet' ][ 'channelTitle' ] : 'Global Control';
 $channelId = ( isset( $playlists[ 'items' ][ 0 ] ) && isset( $playlists[ 'items' ][ 0 ][ 'snippet' ] ) && isset( $playlists[ 'items' ][ 0 ][ 'snippet' ][ 'channelId' ] ) ) ? $playlists[ 'items' ][ 0 ][ 'snippet' ][ 'channelId' ] : false;
 
-$this->toPost( $playlists );
+// $SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN_CLS->publiclist( [
+// 	'exclude' => [],
+// 	'include' => [],
+// 	'channel' => $currentChannel,
+// 	'items' => []
+// ] )
 ?>
-
-<pre style="display: none;"><?php // $this->toPost( $playlists );// print_r( $playlists ); ?></pre>
+<!-- <pre style="display: none;"><?php // print_r( $playlists ); ?></pre> -->
 
 <div class="template__wrapper background__greyBg px30 py50">
 	<div class="fwp-admin-setting-tabs">
