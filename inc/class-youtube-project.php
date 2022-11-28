@@ -236,7 +236,7 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN {
     $return = $get;$return[ 'items' ] = [];
     foreach( $get[ 'items' ] as $i => $item ) {
       // if( $item[ 'is_Public' ] ) {$return[ 'items' ][] = $item;}
-      if( isset( $item[ 'status' ] ) && isset( $item[ 'status' ][ 'privacyStatus' ] ) && $item[ 'status' ][ 'privacyStatus' ] != 'public' ) {} else {$return[ 'items' ][] = $item;}
+      if( isset( $item[ 'status' ] ) && isset( $item[ 'status' ][ 'privacyStatus' ] ) && $item[ 'status' ][ 'privacyStatus' ] == 'public' ) {} else {$return[ 'items' ][] = $item;}
     }
     return $return;
   }
@@ -724,7 +724,7 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN {
   }
   public function template_include( $template ) {
     global $wp, $wp_query, $post;
-    if( is_singular( 'playlist' ) || $wp->query_vars[ 'post_type' ] == 'playlist' || get_query_var('post_type') == 'playlist' ) {
+    if( is_singular( 'playlist' ) || ( isset( $wp->query_vars[ 'post_type' ] ) && $wp->query_vars[ 'post_type' ] == 'playlist' ) || get_query_var('post_type') == 'playlist' ) {
       if( false && is_archive() ) {
         $template = YOUTUBE_PLAYLIST_API_INTEGRATION_PATH . '/inc/template/archive.php';
       } else if( is_single() ) {
