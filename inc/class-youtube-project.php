@@ -21,6 +21,7 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN {
 	public $id = null;
 	public $base = null;
 	public $currency = null;
+	public $settings = false;
 	public $label = null;
 	public $version = null;
   public static function instance() {
@@ -73,7 +74,8 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN {
     // No use
     // add_filter( 'post_thumbnail_html', [ $this, 'posThumbnail' ], 99, 5 );
     add_filter( 'template_include', [ $this, 'template_include' ], 10, 1 );
-    
+
+    add_shortcode( 'fwp-social-counter', [ $this, 'socialShortcode' ] );
   }
   public function url( $url = false ) {}
   public function pre( $args ) {
@@ -733,5 +735,175 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN {
     }
     
     return $template;
+  }
+
+  private function socialCounter( $args = [] ) {
+    $args = wp_parse_args( $args, [
+      'for'           => '',
+      'channel'       => '',
+      'user'          => '',
+      'page'          => '',
+      'appID'         => '',
+      'appSecret'     => '',
+      'formated'      => false
+    ] );
+    if( ! empty( $args[ 'for' ] ) && in_array( $args[ 'for' ], [ 'facebook', 'twitter', 'linkedin', 'instagram', 'youtube' ] ) ) {
+      $option_key = YOUTUBE_API_SPECIAL_PLAYLIST_CONTROL[ 'option_prefix' ] . '_socialCounter_' . $args[ 'for' ];
+      $data = get_option( $option_key, [
+        'totals'    => 0,
+        'updated'   => null
+      ] );
+      $currentTime = date( 'Y-m-d' );$totals = null;
+      if( false && isset( $data[ 'updated' ] ) && ! is_null( $data[ 'updated' ] ) && $data[ 'updated' ] == $currentTime ) {
+        return ( $args[ 'formated' ] === true ) ? number_format_i18n( $data[ 'totals' ], 0 ) : $data[ 'totals' ];
+        // return isset( $data[ 'totals' ] ) ? number_format_i18n( $data[ 'totals' ], 0 ) : number_format_i18n( 0.00, 0 );
+      } else {
+        switch ( $args[ 'for' ] ) {
+          case 'facebook':
+            if( ! empty( $args[ 'page' ] ) && ! empty( $args[ 'appID' ] ) && ! empty( $args[ 'appSecret' ] ) ) {
+              $result = $this->curlExec( 'https://graph.facebook.com/v2.9/' . $args[ 'page' ] . '/?fields=fan_count&access_token=' . $args['appID'] . '|' . $args['appSecret'] );
+              $facebookData = json_decode( $result, true );
+              $facebookLikes = $facebookData['fan_count'];
+              $totals = $facebookLikes;
+            }
+            break;
+          case 'twitter':
+            if( ! empty( $args[ 'user' ] ) ) {
+              $result = $this->curlExec( 'https://cdn.syndication.twimg.com/widgets/followbutton/info.json?screen_names=' . $args[ 'user' ] );
+              $twitterData = json_decode( $result, true );
+              $twitterFollowers = $twitterData[0]['followers_count']; // formatted_followers_count: 372K followers
+              $totals = $twitterFollowers;
+              // print_r( $twitterData );wp_die($totals);
+            }
+            break;
+          case 'instagram':
+            if( ! empty( $args[ 'user' ] ) ) {
+              // https://graph.facebook.com/v15.0/17841405822304914?fields=followers_count&access_token=EAACwX
+              $result = $this->curlExec( 'https://www.instagram.com/web/search/topsearch/?query=' . $args[ 'user' ] );
+              $instagramData = json_decode( $result, true );
+              $instagramFollowers = 0;
+              foreach( $instagramData[ 'users' ] as $instaRow ) {
+                if( $instaRow[ 'user' ][ 'username' ] == $args[ 'user' ] ) {
+                  $instagramFollowers = $instaRow[ 'user' ][ 'follower_count' ];
+                }
+              }
+              $totals = $instagramFollowers;
+            }
+            break;
+          case 'youtube':
+            $argv = YOUTUBE_API_SPECIAL_PLAYLIST_CONTROL;
+            if( ! empty( $args[ 'channel' ] ) && isset( $argv[ 'youtubeAPI' ] ) ) {
+              $result = $this->curlExec( 'https://www.googleapis.com/youtube/v3/channels?part=statistics&forUsername=' . $args[ 'channel' ] . '&key=' . $argv[ 'youtubeAPI' ] );
+              $youTubeData = json_decode( $result, true );
+              $youTubeSubscribers = $youTubeData['items'][0]['statistics']['subscriberCount'];
+              $totals = $youTubeSubscribers;
+            }
+            break;
+          default:
+            // $totals = 0;
+            break;
+        }
+      }
+      if( ! is_null( $totals ) ) {
+        if( is_null( $data[ 'updated' ] ) ) {
+          add_option( $option_key, [
+            'totals'    => $totals,
+            'updated'   => $currentTime
+          ], 'To save social interactions', true );
+        } else {
+          update_option( $option_key, [
+            'totals'    => $totals,
+            'updated'   => $currentTime
+          ], true );
+        }
+        return ( $args[ 'formated' ] === true ) ? number_format_i18n( $totals, 0 ) : $totals;
+      } else {
+        return ( $args[ 'formated' ] === true ) ? number_format_i18n( 0, 0 ) : 0;
+      }
+    }
+  }
+  private function curlExec( $url ) {
+    $ch = curl_init();
+    curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+    // url here
+    curl_setopt( $ch, CURLOPT_URL, $url );
+    $output = curl_exec( $ch );
+  }
+  public function socialShortcode( $args = [] ) {
+    // if( date( 'Y-m-d' ) != '2022-12-13' ) {return '';}
+    // $args = wp_parse_args( $args, [] );
+    $socialSites = [
+      [
+        'title'         => __( 'Facebook', 'youtube-playlist-api-integration' ),
+        'icon'          => 'fab fa-facebook',
+        'url'           => 'https://tr-tr.facebook.com/' . $this->get_option( 'facebook-page', 'hayalhanemmersin' ),
+        'args'          => [
+          'for'         => 'facebook',
+          'page'          => $this->get_option( 'facebook-page', 'hayalhanemmersin' ),
+          'appID'         => $this->get_option( 'facebook-id', '607297980641106' ),
+          'appSecret'     => $this->get_option( 'facebook-secrete', '' )
+        ]
+      ],
+      [
+        'title'         => __( 'Twitter', 'youtube-playlist-api-integration' ),
+        'icon'          => 'fab fa-twitter',
+        'url'           => 'https://twitter.com/' . $this->get_option( 'twitter-username', 'hayalhanemersin' ),
+        'args'          => [
+          'for'         => 'twitter',
+          'user'          => $this->get_option( 'twitter-username', 'hayalhanemersin' )
+        ]
+      ],
+      [
+        'title'         => __( 'Instagram', 'youtube-playlist-api-integration' ),
+        'icon'          => 'fab fa-instagram',
+        'url'           => 'https://www.instagram.com/' . $this->get_option( 'instagram-username', 'hayalhanemmersin' ),
+        'args'          => [
+          'for'         => 'instagram',
+          'user'          => $this->get_option( 'instagram-username', 'hayalhanemmersin' )
+        ]
+      ],
+      [
+        'title'         => __( 'Youtube', 'youtube-playlist-api-integration' ),
+        'icon'          => 'fab fa-youtube',
+        'url'           => 'https://www.youtube.com/c/' . $this->get_option( 'youtube-username', 'hayalhanem' ),
+        'args'          => [
+          'for'         => 'youtube',
+          'user'          => $this->get_option( 'youtube-username', 'hayalhanem' )
+        ]
+      ],
+      [
+        'title'         => __( 'Telegram', 'youtube-playlist-api-integration' ),
+        'icon'          => 'fab fa-telegram',
+        'url'           => 'https://t.me/' . $this->get_option( 'telegram-username', 'hayalhanemmersin' ),
+        'args'          => [
+          'for'         => 'telegram',
+          'user'          => $this->get_option( 'telegram-username', 'hayalhanemmersin' )
+        ]
+      ],
+    ];
+    ob_start();
+    ?>
+    <div class="fwp-elementor-shortcode-row fwp-shortcode-social" data-element_type="column">
+      <?php foreach( $socialSites as $i => $social ) : ?>
+        <?php echo wp_kses_post( str_replace( [
+          '{logo}',
+          '{url}',
+          '{totals}',
+          '{title}',
+        ], [
+          esc_attr( $social[ 'icon' ] ),
+          esc_url( $social[ 'url' ] ),
+          esc_attr( $this->socialCounter( $social[ 'args' ] ) ),
+          esc_html( $social[ 'title' ] )
+        ], $this->get_option( 'shortcode-template', '' ) ) ); ?>
+      <?php endforeach; ?>
+    </div>
+    <style><?php echo $this->get_option( 'shortcode-inlinecss', '' ); ?></style>
+    <?php
+    return ob_get_clean();// ob_end_clean();
+  }
+  private function get_option( $option, $default ) {
+    $this->settings = ( $this->settings ) ? $this->settings : get_option( YOUTUBE_API_SPECIAL_PLAYLIST_CONTROL[ 'option_prefix' ] . '_settings', [] );
+    return isset( $this->settings[ $option ] ) ? $this->settings[ $option ] : $default;
   }
 }
