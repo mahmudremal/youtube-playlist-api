@@ -186,9 +186,9 @@
                         </a>\
                         <picture>\
                           <source sizes="162px" type="image/webp" data-srcset="' + e.thumbnails.medium + '" srcset="' + e.thumbnails.medium + '">\
-                          <img width="480" height="270" src="' + e.thumbnails.medium + '" class="imagehvr-anim-none imagehvr-anim-zoom-in-out attachment-full size-full lazyautosizes lazyloaded" alt="" data-eio="p" data-src="' + e.thumbnails.medium + '" decoding="async" data-srcset="' + e.thumbnails.medium + '" data-sizes="auto" sizes="162px" srcset="' + e.thumbnails.medium + '">\
+                          <img data-width="480" height="270" src="' + e.thumbnails.medium + '" class="imagehvr-anim-none imagehvr-anim-zoom-in-out attachment-full size-full lazyautosizes lazyloaded" alt="" data-eio="p" data-src="' + e.thumbnails.medium + '" decoding="async" data-srcset="' + e.thumbnails.medium + '" data-sizes="auto" sizes="162px" srcset="' + e.thumbnails.medium + '">\
                           <noscript>\
-                            <img loading="lazy" width="480" height="270" src="' + e.thumbnails.medium + '" class="imagehvr-anim-none imagehvr-anim-zoom-in-out attachment-full size-full" alt="" srcset="' + e.thumbnails.medium + '" sizes="(max-width: 480px) 100vw, 480px" data-eio="l" />\
+                            <img loading="lazy" data-width="480" height="270" src="' + e.thumbnails.medium + '" class="imagehvr-anim-none imagehvr-anim-zoom-in-out attachment-full size-full" alt="" srcset="' + e.thumbnails.medium + '" sizes="(max-width: 480px) 100vw, 480px" data-eio="l" />\
                           </noscript>\
                         </picture>\
                     </div>\

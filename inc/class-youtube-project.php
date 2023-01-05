@@ -110,9 +110,9 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN {
 								</a>
 								<picture>
 									<source sizes="162px" type="image/webp" data-srcset="<?php echo esc_url( $item['thumbnail'][ 'url' ] ); ?>" srcset="<?php echo esc_url( $item['thumbnail'][ 'url' ] ); ?>" >
-									<img width="480" height="270" src="<?php echo esc_url( $item['thumbnail'][ 'url' ] ); ?>" class="imagehvr-anim-none imagehvr-anim-zoom-in-out attachment-full size-full lazyautosizes lazyloaded" alt="" data-eio="p" data-src="<?php echo esc_url( $item['thumbnail'][ 'url' ] ); ?>" decoding="async" data-srcset="<?php echo esc_url( $item['thumbnail'][ 'url' ] ); ?>" data-sizes="auto" sizes="162px" srcset="<?php echo esc_url( $item['thumbnail'][ 'url' ] ); ?>" >
+									<img data-width="480" height="270" src="<?php echo esc_url( $item['thumbnail'][ 'url' ] ); ?>" class="imagehvr-anim-none imagehvr-anim-zoom-in-out attachment-full size-full lazyautosizes lazyloaded" alt="" data-eio="p" data-src="<?php echo esc_url( $item['thumbnail'][ 'url' ] ); ?>" decoding="async" data-srcset="<?php echo esc_url( $item['thumbnail'][ 'url' ] ); ?>" data-sizes="auto" sizes="162px" srcset="<?php echo esc_url( $item['thumbnail'][ 'url' ] ); ?>" >
 									<noscript>
-										<img width="480" height="270" src="<?php echo esc_url( $item['thumbnail'][ 'url' ] ); ?>" class="imagehvr-anim-none imagehvr-anim-zoom-in-out attachment-full size-full" alt="" srcset="<?php echo esc_url( $item['thumbnail'][ 'url' ] ); ?>" sizes="(max-width: 480px) 100vw, 480px" data-eio="l" />
+										<img data-width="480" height="270" src="<?php echo esc_url( $item['thumbnail'][ 'url' ] ); ?>" class="imagehvr-anim-none imagehvr-anim-zoom-in-out attachment-full size-full" alt="" srcset="<?php echo esc_url( $item['thumbnail'][ 'url' ] ); ?>" sizes="(max-width: 480px) 100vw, 480px" data-eio="l" />
 									</noscript>
 								</picture>
 						</div>
@@ -745,6 +745,7 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN {
       'page'          => '',
       'appID'         => '',
       'appSecret'     => '',
+      'token'         => '',
       'formated'      => false
     ] );
     if( ! empty( $args[ 'for' ] ) && in_array( $args[ 'for' ], [ 'facebook', 'twitter', 'linkedin', 'instagram', 'youtube' ] ) ) {
@@ -797,6 +798,21 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN {
               $youTubeData = json_decode( $result, true );
               $youTubeSubscribers = $youTubeData['items'][0]['statistics']['subscriberCount'];
               $totals = $youTubeSubscribers;
+            }
+            break;
+          // https://api.telegram.org/bot<your-bot-api-token>/getChatMembersCount?chat_id=@<channel-name>
+          // https://www.fineshopdesign.com/2022/03/get-channel-or-group-info-using-telegram-api.html
+          case 'instagram':
+            if( ! empty( $args[ 'user' ] ) ) {
+              $result = $this->curlExec( 'https://api.telegram.org/bot' . $args[ 'token' ] . '/getChatMembersCount?chat_id=' . $args[ 'user' ] );
+              $instagramData = json_decode( $result, true );
+              $instagramFollowers = 0;
+              foreach( $instagramData[ 'users' ] as $instaRow ) {
+                if( $instaRow[ 'user' ][ 'username' ] == $args[ 'user' ] ) {
+                  $instagramFollowers = $instaRow[ 'user' ][ 'follower_count' ];
+                }
+              }
+              $totals = $instagramFollowers;
             }
             break;
           default:
