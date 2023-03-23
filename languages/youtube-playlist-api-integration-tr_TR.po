@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: YouTube playlist integration\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-09-07 09:44+0000\n"
-"PO-Revision-Date: 2022-09-07 09:46+0000\n"
+"PO-Revision-Date: 2022-12-13 16:08+0000\n"
 "Last-Translator: \n"
 "Language-Team: Turkish\n"
 "Language: tr_TR\n"
@@ -12,7 +12,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Loco https://localise.biz/\n"
-"X-Loco-Version: 2.6.2; wp-6.0.2\n"
+"X-Loco-Version: 2.6.3; wp-6.1.1\n"
 "X-Domain: youtube-playlist-api-integration"
 
 #: youtube-playlist-api.php:300
@@ -20,26 +20,29 @@ msgid ""
 "Channel title can't be placed because of youtube API doesn't supply proper "
 "data."
 msgstr ""
+"Kanal başlığı yerleştirilemez çünkü Youtube API doğru verileri sağlamaz."
 
 #: youtube-playlist-api.php:331 youtube-playlist-api.php:431
 msgid "Failed to fetch request!"
-msgstr ""
+msgstr "Başarısız başvuru yapıldı!"
 
 #: youtube-playlist-api.php:378
 msgid "Failed to findout category :("
-msgstr ""
+msgstr "Kategoriyi bulamadım : ("
 
 #: youtube-playlist-api.php:350
 msgid "Failed to findout targeted playlist :("
 msgstr ""
+"Sonraki YazıSonraki YazıSonraki YazıSonraki YazıSonraki YazıSonraki "
+"YazıSonraki YazıSonraki Yazı("
 
 #: youtube-playlist-api.php:361
 msgid "Failed to findout your channel :("
-msgstr ""
+msgstr "Kanalınızı bulamadım :)"
 
 #. Author of the plugin
 msgid "Future WordPress"
-msgstr ""
+msgstr "Wordpress Geleceği"
 
 #. Author URI of the plugin
 msgid "https://developer.futurewordpress.com/"
@@ -50,45 +53,51 @@ msgid ""
 "https://hayalhanem.conceptwebactueel.nl/wp-admin/admin-ajax.php?"
 "action=epaper_api"
 msgstr ""
+"Https: //Hayalhanem.Conceptwebactueel.Nl/Wp-Admin/Admin-Ajax.Php? "
+"aksiyon=Epaper_Api"
 
 #: youtube-playlist-api.php:677
 msgid "Playlists"
-msgstr ""
+msgstr "Oyuncuları"
 
 #: youtube-playlist-api.php:679
 msgid "Playlists shortcode"
-msgstr ""
+msgstr "Shortcode oyunları"
 
 #: youtube-playlist-api.php:678
 msgid "Settings"
-msgstr ""
+msgstr "ayarları"
 
 #: youtube-playlist-api.php:300
 msgid ""
 "Settings Saved successfully! If your playlists are correct, you can see "
 "their on playlist gallery's channel name."
 msgstr ""
+"Ayarlar başarıyla kurtarıldı! Oyun listeleriniz doğru ise, Playlist "
+"Galerisi'nin kanal adında bunları görebilirsiniz."
 
 #: youtube-playlist-api.php:679
 msgid "Shortcodes"
-msgstr ""
+msgstr "Kısa kodlar"
 
 #: youtube-playlist-api.php:415
 msgid ""
 "Something went wrong while tring to update database. Database update error :("
 msgstr ""
+"Bir şey yanlış gitti Tring veritabanı güncelleştirme sırasında. "
+"Güncelleştirme güncelleştirme ("
 
 #: youtube-playlist-api.php:376
 msgid "Successfully changed category :)"
-msgstr ""
+msgstr "kategoriyi başarıyla değiştirebilirim :)"
 
 #: youtube-playlist-api.php:359
 msgid "Successfully Submitted this channel action :)"
-msgstr ""
+msgstr "Bu kanal etkinliğini başarıyla sunuyorum :)"
 
 #: youtube-playlist-api.php:348
 msgid "Successfully Submitted this playlist action :)"
-msgstr ""
+msgstr "Başarılı bir şekilde bu Playlist etkinliğini sunuyorum :)"
 
 #. Description of the plugin
 msgid ""
@@ -96,25 +105,30 @@ msgid ""
 "API. It is collecting data from a channel, by private API key, and then "
 "proposed to publish here with category selecting."
 msgstr ""
+"Bu eklenti Youtube'dan veri toplamak için Youtube resmi API kullanılarak "
+"kullanılır. Bir kanaldan, özel API anahtarı ile veri topluyor ve daha sonra "
+"kategoriyi seçerek burada yayınlanmasını öneriyor."
 
 #: youtube-playlist-api.php:302
 msgid ""
 "We're facing soome trouble identifing your request. Please contact to this "
 "plugin developer."
 msgstr ""
+"İsteğinizi tanımlamak için Soome sorunları ile karşı karşıyayız. Lütfen bu "
+"Plugin geliştiricisi ile iletişime geçin."
 
 #: youtube-playlist-api.php:69
 msgid "Youtube API integration"
-msgstr ""
+msgstr "Youtube API Geliştirme"
 
 #: youtube-playlist-api.php:678
 msgid "Youtube integration API Setup"
-msgstr ""
+msgstr "Youtube Entegre API Kurulumu"
 
 #. Name of the plugin
 msgid "YouTube playlist integration"
-msgstr ""
+msgstr "Youtube Playlist İncelemesi"
 
 #: youtube-playlist-api.php:677
 msgid "Youtube playlists"
-msgstr ""
+msgstr "Youtube Oyun Listesi"

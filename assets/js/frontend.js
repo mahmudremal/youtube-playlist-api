@@ -49,7 +49,7 @@
 		 * initialize script
 		 */
     init() {
-      this.popup();
+      // this.popup();
       // this.click();
       if( this.settings.listOrder ) {
         var nav = document.querySelector( '.elementor-widget.elementor-widget-global.elementor-widget-nav-menu .elementor-widget-container nav ul' );

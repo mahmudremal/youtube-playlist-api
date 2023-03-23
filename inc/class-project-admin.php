@@ -47,7 +47,7 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN_ADMIN {
     wp_localize_script( 'youtube-playlist-api-integration-js', 'siteConfig', [
 			'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
 			'ajax_nonce' => wp_create_nonce( 'youtube_api_playlist_toggle' ),
-      'confirmUpdate' => __( "Are you sure you want to update this playlist?\nFYI, there is possibility to massup playlist sorting order and that is totally happen by Google API, and this update required to control API callback.", 'youtube-playlist-api-integration' )
+      'confirmUpdate' => __( "Are you sure you want to update this playlist?\nFYI, there is possibility to massup playlist sorting order and that is totally happen by Google API, and this update required to control API callback.", 'domain' )
 		] );
   }
   public function filemtime( $url ) {

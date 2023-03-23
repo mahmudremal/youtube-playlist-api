@@ -110,9 +110,9 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN {
 								</a>
 								<picture>
 									<source sizes="162px" type="image/webp" data-srcset="<?php echo esc_url( $item['thumbnail'][ 'url' ] ); ?>" srcset="<?php echo esc_url( $item['thumbnail'][ 'url' ] ); ?>" >
-									<img data-width="480" height="270" src="<?php echo esc_url( $item['thumbnail'][ 'url' ] ); ?>" class="imagehvr-anim-none imagehvr-anim-zoom-in-out attachment-full size-full lazyautosizes lazyloaded" alt="" data-eio="p" data-src="<?php echo esc_url( $item['thumbnail'][ 'url' ] ); ?>" decoding="async" data-srcset="<?php echo esc_url( $item['thumbnail'][ 'url' ] ); ?>" data-sizes="auto" sizes="162px" srcset="<?php echo esc_url( $item['thumbnail'][ 'url' ] ); ?>" >
+									<img width="480" height="270" src="<?php echo esc_url( $item['thumbnail'][ 'url' ] ); ?>" class="imagehvr-anim-none imagehvr-anim-zoom-in-out attachment-full size-full lazyautosizes lazyloaded" alt="" data-eio="p" data-src="<?php echo esc_url( $item['thumbnail'][ 'url' ] ); ?>" decoding="async" data-srcset="<?php echo esc_url( $item['thumbnail'][ 'url' ] ); ?>" data-sizes="auto" sizes="162px" srcset="<?php echo esc_url( $item['thumbnail'][ 'url' ] ); ?>" >
 									<noscript>
-										<img data-width="480" height="270" src="<?php echo esc_url( $item['thumbnail'][ 'url' ] ); ?>" class="imagehvr-anim-none imagehvr-anim-zoom-in-out attachment-full size-full" alt="" srcset="<?php echo esc_url( $item['thumbnail'][ 'url' ] ); ?>" sizes="(max-width: 480px) 100vw, 480px" data-eio="l" />
+										<img width="480" height="270" src="<?php echo esc_url( $item['thumbnail'][ 'url' ] ); ?>" class="imagehvr-anim-none imagehvr-anim-zoom-in-out attachment-full size-full" alt="" srcset="<?php echo esc_url( $item['thumbnail'][ 'url' ] ); ?>" sizes="(max-width: 480px) 100vw, 480px" data-eio="l" />
 									</noscript>
 								</picture>
 						</div>
@@ -587,21 +587,20 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN {
     return file_exists( $url ) ? filemtime( $url ) : YOUTUBE_PLAYLIST_API_INTEGRATION_VERSION;
   }
   public function enqueuef() {
-    wp_enqueue_script( 'youtube-playlist-frontend-script', YOUTUBE_PLAYLIST_API_INTEGRATION_URL . 'assets/js/frontend.min.js', [ 'jquery' ], $this->filemtime( YOUTUBE_PLAYLIST_API_INTEGRATION_PATH . 'assets/js/frontend.min.js' ), true );
-    wp_enqueue_script( 'youtube-playlist-player-script', YOUTUBE_PLAYLIST_API_INTEGRATION_URL . 'assets/js/youtube.js', [ 'jquery' ], $this->filemtime( YOUTUBE_PLAYLIST_API_INTEGRATION_PATH . 'assets/js/youtube.js' ), true );
-    wp_localize_script( 'youtube-playlist-frontend-script', 'siteConfig', [
-			'ajaxUrl'         => admin_url( 'admin-ajax.php' ),
-			'ajax_nonce'      => wp_create_nonce( 'youtube-playlist-frontend-script' ),
-      'listOrder'       => true,
-      'singleCategory'  => true,
-      'errorImage'      => YOUTUBE_PLAYLIST_API_INTEGRATION_URL . 'assets/img/nill-frawn.svg', // empty-postbox.svg
-      'i18n'            => [
-        'serverError' => __( 'We\'re facing some problem while trying to get lists from server.', 'youtube-playlist-api-integration' ),
-        'apiError' => __( 'We\'re facing some problem while trying to get playlist from Google server.', 'youtube-playlist-api-integration' ),
-        'emptyError' => __( 'There is nothing to show. Maybe List is empty or isn\'t publicly visible.', 'youtube-playlist-api-integration' ),
-      ]
-		] );
-    wp_enqueue_style( 'youtube-playlist-frontend-style', YOUTUBE_PLAYLIST_API_INTEGRATION_URL . 'assets/css/frontend.min.css', [], $this->filemtime( YOUTUBE_PLAYLIST_API_INTEGRATION_PATH . 'assets/css/frontend.min.css' ), 'all' );
+    // wp_enqueue_script( 'youtube-playlist-frontend-script', YOUTUBE_PLAYLIST_API_INTEGRATION_URL . 'assets/js/frontend.min.js', [ 'jquery' ], $this->filemtime( YOUTUBE_PLAYLIST_API_INTEGRATION_PATH . 'assets/js/frontend.min.js' ), true );
+    // wp_localize_script( 'youtube-playlist-frontend-script', 'siteConfig', [
+		// 	'ajaxUrl'         => admin_url( 'admin-ajax.php' ),
+		// 	'ajax_nonce'      => wp_create_nonce( 'youtube-playlist-frontend-script' ),
+    //   'listOrder'       => true,
+    //   'singleCategory'  => true,
+    //   'errorImage'      => YOUTUBE_PLAYLIST_API_INTEGRATION_URL . 'assets/img/nill-frawn.svg', // empty-postbox.svg
+    //   'i18n'            => [
+    //     'serverError' => __( 'We\'re facing some problem while trying to get lists from server.', 'youtube-playlist-api-integration' ),
+    //     'apiError' => __( 'We\'re facing some problem while trying to get playlist from Google server.', 'youtube-playlist-api-integration' ),
+    //     'emptyError' => __( 'There is nothing to show. Maybe List is empty or isn\'t publicly visible.', 'youtube-playlist-api-integration' ),
+    //   ]
+		// ] );
+    // wp_enqueue_style( 'youtube-playlist-frontend-style', YOUTUBE_PLAYLIST_API_INTEGRATION_URL . 'assets/css/frontend.min.css', [], $this->filemtime( YOUTUBE_PLAYLIST_API_INTEGRATION_PATH . 'assets/css/frontend.min.css' ), 'all' );
   }
   public function cpt() {
     $labels = array(
@@ -746,7 +745,6 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN {
       'page'          => '',
       'appID'         => '',
       'appSecret'     => '',
-      'token'         => '',
       'formated'      => false
     ] );
     if( ! empty( $args[ 'for' ] ) && in_array( $args[ 'for' ], [ 'facebook', 'twitter', 'linkedin', 'instagram', 'youtube' ] ) ) {
@@ -799,21 +797,6 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN {
               $youTubeData = json_decode( $result, true );
               $youTubeSubscribers = $youTubeData['items'][0]['statistics']['subscriberCount'];
               $totals = $youTubeSubscribers;
-            }
-            break;
-          // https://api.telegram.org/bot<your-bot-api-token>/getChatMembersCount?chat_id=@<channel-name>
-          // https://www.fineshopdesign.com/2022/03/get-channel-or-group-info-using-telegram-api.html
-          case 'instagram':
-            if( ! empty( $args[ 'user' ] ) ) {
-              $result = $this->curlExec( 'https://api.telegram.org/bot' . $args[ 'token' ] . '/getChatMembersCount?chat_id=' . $args[ 'user' ] );
-              $instagramData = json_decode( $result, true );
-              $instagramFollowers = 0;
-              foreach( $instagramData[ 'users' ] as $instaRow ) {
-                if( $instaRow[ 'user' ][ 'username' ] == $args[ 'user' ] ) {
-                  $instagramFollowers = $instaRow[ 'user' ][ 'follower_count' ];
-                }
-              }
-              $totals = $instagramFollowers;
             }
             break;
           default:
