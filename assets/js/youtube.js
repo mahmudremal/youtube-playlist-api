@@ -30,8 +30,9 @@
       this.watchGrids();
       this.watchEscKey();
     }
-    createPopUp( playlist ) {
-      const thisClass = this;
+    createPopUp(el) {
+      const thisClass = this;var playlist;
+      playlist = el.dataset.id;
       return new Promise( async (resolve, reject) => {
         document.querySelectorAll( '.fwp-yt-popup' ).forEach( ( pop ) => {pop.remove();} );
         var popupwraper, popupbackdrop, popupcontainer, popupwrap, iframe, close, sidebar, list, item, videoId, itemlink, itemrow, itemleft, thumb, image, duration, itemright, title, metas, channel, seperator, lastmodified;
@@ -39,11 +40,12 @@
         popupbackdrop = document.createElement( 'div' );popupbackdrop.classList.add( 'popup-backdrop' );popupwraper.appendChild( popupbackdrop );
         popupcontainer = document.createElement( 'div' );popupcontainer.classList.add( 'popup-center__container' );
         popupwrap = document.createElement( 'div' );popupwrap.classList.add( 'popup-center__body' );
+        if(el.dataset.isPlaylist!='true') {popupwrap.classList.add('isnt-playlist');}
         close = document.createElement( 'div' );close.classList.add( 'popup-center__close', 'fas', 'fa-times' );popupwrap.appendChild( close );
         iframe = document.createElement( 'iframe' );iframe.classList.add( 'popup-center__iframe' );
         iframe.width = 560;iframe.height = 315;iframe.frameborder = '0';iframe.allowfullscreen = 'true';
         iframe.allow = 'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture';
-        iframe.src = 'https://www.youtube.com/embed/videoseries?list=' + playlist;popupwrap.appendChild( iframe );
+        iframe.src = (el.dataset.isPlaylist=='true')?'https://www.youtube.com/embed/videoseries?list='+playlist:'https://www.youtube.com/embed/'+playlist+'?autoplay=0&fs=0&iv_load_policy=3&showinfo=0&rel=0&cc_load_policy=0&start=0&end=0&origin='+location.origin;popupwrap.appendChild( iframe );
         sidebar = document.createElement( 'div' );sidebar.classList.add( 'popup-sidebar-right' );
         list = document.createElement( 'ul' );list.classList.add( 'popup-playlist-items' );
 
@@ -173,7 +175,7 @@
             el.addEventListener( 'click', ( e ) => {
               e.preventDefault();
               thisClass.doPreloader( true );
-              thisClass.createPopUp( el.dataset.id ).then( data => {
+              thisClass.createPopUp(el).then(data => {
                   // console.log( data );
                   thisClass.doPreloader( false );
               } ).catch(error => {

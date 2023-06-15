@@ -146,6 +146,7 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN_ADMIN {
   }
   public function remote( $expect, $declare ) {
     $return = wp_remote_get( $this->apis( $expect, $declare ) );
+    if(is_wp_error($return)) {return ['error' => 'Error extablishing connection.'];}
     
     $return = isset( $return[ 'body' ] ) ? $return[ 'body' ] : '{}';
     $return = json_decode( $return, true );
@@ -166,7 +167,7 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN_ADMIN {
         set_transient( $this->id, [ 'type' => 'error', 'message' => $rtn[ 'error'][ 'message' ] ], 45 );
         continue;
       }
-      foreach( $rtn[ 'items' ] as $j => $jrow ) {
+      foreach( (array) $rtn[ 'items' ] as $j => $jrow ) {
         array_push( $return[ 'items' ], $jrow );
       }
     }
@@ -197,9 +198,10 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN_ADMIN {
     $argv = YOUTUBE_API_SPECIAL_PLAYLIST_CONTROL;
     $args = ( $declare !== false ) ? $declare : $argv;
     $apis = [
-      'playlistItems' => 'https://www.googleapis.com/youtube/v3/playlistItems?key=' . $argv[ 'youtubeAPI' ] . '&part=snippet%2CcontentDetails' . ( isset( $args[ 'playlistId' ] ) ? '&playlistId=' . $args[ 'playlistId' ] : '' ) . '&maxResults=' . ( isset( $args[ 'maxResults' ] ) ? $args[ 'maxResults' ] : 50 ),
-      'playlists' => 'https://www.googleapis.com/youtube/v3/playlists?part=id%2Csnippet' . ( isset( $args[ 'channelId' ] ) ? '&channelId=' . $args[ 'channelId' ] : '' )  . '&key=' . $argv[ 'youtubeAPI' ] . '&maxResults=' . ( isset( $args[ 'maxResults' ] ) ? $args[ 'maxResults' ] : 50 ) . '' . ( isset( $args[ 'nextPageToken' ] ) ? '&pageToken=' . $args[ 'nextPageToken' ] : '' ),
-      'channels' => 'https://www.googleapis.com/youtube/v3/channels?key=' . $argv[ 'youtubeAPI' ] . '&maxResults=' . ( isset( $args[ 'maxResults' ] ) ? $args[ 'maxResults' ] : 50 ) . '&part=snippet' . ( isset( $args[ 'id' ] ) ? '&id=' . implode( ',', $args[ 'id' ] ) : '' ) . '' . ( isset( $args[ 'forUsername' ] ) ? '&forUsername=' . $args[ 'forUsername' ] : '' )
+      'playlistItems' => 'https://www.googleapis.com/youtube/v3/playlistItems?key=' . $argv['youtubeAPI'].'&part=snippet%2CcontentDetails'.(isset($args['playlistId'])?'&playlistId='.$args['playlistId']:'').'&maxResults='.(isset($args['maxResults'])?$args['maxResults']:50),
+      'playlists' => 'https://www.googleapis.com/youtube/v3/playlists?part=id%2Csnippet'.(isset($args['channelId'])?'&channelId='.$args['channelId']:'').'&key='.$argv['youtubeAPI'].'&maxResults='.(isset($args['maxResults'])?$args['maxResults']:50).''.(isset($args['nextPageToken'])?'&pageToken='.$args['nextPageToken']:''),
+      'channels' => 'https://www.googleapis.com/youtube/v3/channels?key='.$argv['youtubeAPI'].'&maxResults='.(isset($args['maxResults'])?$args['maxResults']:50).'&part=snippet'.(isset($args['id'])?'&id='.implode(',',$args['id']):'').''.(isset($args['forUsername'])?'&forUsername='.$args['forUsername']:''),
+      'leatest' => 'https://www.googleapis.com/youtube/v3/search?part=snippet'.(isset($args['channelId'])?'&channelId='.$args['channelId']:'').'&maxResults=50&order=date&type=video&key='.$argv['youtubeAPI'],
     ];
     return isset( $apis[ $expect ] ) ? $apis[ $expect ] : $apis[ 'playlists' ];
   }
@@ -526,7 +528,7 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN_ADMIN {
     }
     $http     = new WP_Http();
     $response = $http->request( $url );
-    if ( 200 !== $response['response']['code'] ) {
+    if ( is_wp_error( $response ) || 200 !== $response['response']['code'] ) {
       return false;
     }
     $upload = wp_upload_bits( basename( $url ), null, $response['body'] );

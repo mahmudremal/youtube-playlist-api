@@ -5,7 +5,7 @@
  * @package Aquila
  */
 
-use WP_Widget;
+// use WP_Widget;
 class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN_UPDATE {
   private $file;
   private $plugin;
@@ -74,6 +74,7 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN_UPDATE {
     if( property_exists( $transient, 'checked') ) { // Check if transient has a checked property
       if( $checked = $transient->checked ) { // Did Wordpress check for updates?
         $this->get_repository_info(); // Get the repo info
+		if(!$this->github_response) {return;}
         $out_of_date = version_compare( $this->github_response['tag_name'], $checked[ $this->basename ], 'gt' ); // Check if we're out of date
         if( $out_of_date ) {
           $new_files = $this->github_response['zipball_url']; // Get the ZIP
@@ -88,7 +89,7 @@ class SPECIAL_YOUTUBE_PLAYLIST_API_INTEGRATION_PLUGIN_UPDATE {
 				}
 			}
 		}
-    return $transient; // Return filtered transient
+    	return $transient; // Return filtered transient
 	}
   public function plugin_popup( $result, $action, $args ) {
 		if( ! empty( $args->slug ) ) { // If there is a slug

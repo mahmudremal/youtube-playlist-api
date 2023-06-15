@@ -70,6 +70,7 @@ foreach( $playlists as $i => $list ) {
                     <?php echo sprintf( esc_html( '%scolumns%s: is used to declare how many columns will be there on large screen. It is decreasing autometically on different breakpoing. In mobile view, it is full width (optional). Default value is 4.', 'youtube-playlist-api-integration' ), '<strong>', '</strong>' ); ?><br />
                     <?php echo sprintf( esc_html( '%sinclude%s: is to identify which playlist you want to be there. Only those items will be there, for which you\'ve given. If you leave it blank, it will return all list enabled ( optional ).', 'youtube-playlist-api-integration' ), '<strong>', '</strong>' ); ?><br />
                     <?php echo sprintf( esc_html( '%sexclude%s: is to block specific playlists on there. Is comma-seperate value( optional ).', 'youtube-playlist-api-integration' ), '<strong>', '</strong>' ); ?><br />
+                    <?php echo sprintf( esc_html( '%sleatest%s: is to get leatest video that won\'t be a playlist and will apear last 50 videos and will update once a day.', 'youtube-playlist-api-integration' ), '<strong>', '</strong>' ); ?><br />
                   </p>
 
                 </div>
@@ -94,7 +95,7 @@ foreach( $playlists as $i => $list ) {
                 <div class="fwp-tool__card">
                   <div class="content mt30">
                     <div class="align__center mb20">
-                      <input type="text" name="shortcode[<?php echo esc_attr( $id ); ?>]" class="settings-youtubeapi" placeholder="<?php esc_attr_e( "Paste this code anywhere", 'youtube-playlist-api-integration' ); ?>" value="<?php echo esc_attr( '[youtube_gallery channel="' . $id . '" columns="4" include="" exclude=""]' ); ?>" required>
+                      <input type="text" name="shortcode[<?php echo esc_attr( $id ); ?>]" class="settings-youtubeapi" placeholder="<?php esc_attr_e( "Paste this code anywhere", 'youtube-playlist-api-integration' ); ?>" value="<?php echo esc_attr( '[youtube_gallery channel="' . $id . '" columns="4" include="" exclude="" leatest="true"]' ); ?>" required>
                     </div>
                   </div>
                 </div>

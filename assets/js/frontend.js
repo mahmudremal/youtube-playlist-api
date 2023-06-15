@@ -29,6 +29,7 @@
         paging           : 'loadmore',
         scroll_duration  : 500,
         first_load       : true,
+        leatest          : true,
         errorImage       : siteConfig?.errorImage ?? "",
         complete: function( e ) {
           // console.log( 'Completation fired' );
@@ -38,6 +39,7 @@
       this.videoPlayer = false;
       this.videoGallery = false;
       this.currentTitle = null;
+      window.thisClass=this;
       this.i18n = {
         serverError: siteConfig?.i18n.serverError ?? 'Error while tring to connect with server. Maybe server internal problem.',
         apiError: siteConfig?.i18n.apiError ?? 'We\'re facing some problem while trying to get playlist from Google server.',
@@ -62,17 +64,18 @@
       const thisClass = this;
       if( ! thisClass.settings.listOrder ) {return;}
       var menus = nav.querySelectorAll( 'li' ), li, ul, h3, a, items, item;
-      items = document.querySelectorAll( 'body .elementor-container.fwp-elementor-container > .imagehvr-wrapper' );
+      items = (!thisClass.settings.leatest)?document.querySelectorAll( 'body .elementor-container.fwp-elementor-container > .imagehvr-wrapper' ):window.fwpPlaylists;
+      thisClass.playLists = items;
       ul = document.createElement( 'ul' );
       if( items.length >= 1 ) {
         items.forEach( function( item, i ) {
           if( mobile ) {
             li = document.createElement( 'li' );li.classList.add( 'menu-item', 'menu-item-type-post_type', 'menu-item-object-page' );
-            a = document.createElement( 'a' );a.classList.add( 'elementor-item', 'fwp-link-click' );a.href = 'javascript:void(0)';a.innerText = item.querySelector( '.imagecaption' ).dataset.title;a.dataset.order = i;a.dataset.embed = item.querySelector( '.imagehvr .imagehvr-content-wrapper .imagehvr-link' ).dataset.embed;a.dataset.id = item.querySelector( '.imagehvr .imagehvr-content-wrapper .imagehvr-link' ).dataset.id;a.setAttribute( 'tabindex', 0 );
+            a = document.createElement( 'a' );a.classList.add( 'elementor-item', 'fwp-link-click' );a.href = 'javascript:void(0)';a.innerText = (!thisClass.settings.leatest)?item.querySelector( '.imagecaption' ).dataset.title:item.snippet.title;a.dataset.order = i;a.dataset.embed = (!thisClass.settings.leatest)?item.querySelector( '.imagehvr .imagehvr-content-wrapper .imagehvr-link' ).dataset.embed:'https://youtube.com/embed/videoseries/?list='+item.id;a.dataset.id = (!thisClass.settings.leatest)?item.querySelector( '.imagehvr .imagehvr-content-wrapper .imagehvr-link' ).dataset.id:item.id;a.setAttribute( 'tabindex', 0 );
             li.appendChild( a );ul.appendChild( li );
           } else {
             li = document.createElement( 'li' );li.classList.add( 'menu-item', 'menu-item-type-post_type', 'menu-item-object-page' );h3 = document.createElement( 'h3' );
-            a = document.createElement( 'a' );a.classList.add( 'elementor-item', 'fwp-link-click' );a.href = 'javascript:void(0)';a.innerText = item.querySelector( '.imagecaption' ).dataset.title;a.dataset.order = i;a.dataset.embed = item.querySelector( '.imagehvr .imagehvr-content-wrapper .imagehvr-link' ).dataset.embed;a.dataset.id = item.querySelector( '.imagehvr .imagehvr-content-wrapper .imagehvr-link' ).dataset.id;
+            a = document.createElement( 'a' );a.classList.add( 'elementor-item', 'fwp-link-click' );a.href = 'javascript:void(0)';a.innerText = (!thisClass.settings.leatest)?item.querySelector( '.imagecaption' ).dataset.title:item.snippet.title;a.dataset.order = i;a.dataset.embed = (!thisClass.settings.leatest)?item.querySelector( '.imagehvr .imagehvr-content-wrapper .imagehvr-link' ).dataset.embed:item.id;a.dataset.id = (!thisClass.settings.leatest)?item.querySelector( '.imagehvr .imagehvr-content-wrapper .imagehvr-link' ).dataset.id:item.id;
             h3.appendChild( a );li.appendChild( h3 );
             ul.appendChild( li );
           }
@@ -85,14 +88,16 @@
       }
     }
     navClickEvent( nav = false ) {
-      const thisClass = this;if( ! nav ) {return;}
+      const thisClass = this;var el;if( ! nav ) {return;}
       var root = 'body .elementor-container.fwp-elementor-container';
       const playlist = document.querySelectorAll( root + ' > .imagehvr-wrapper' );
       const container = document.querySelectorAll( root );
-      var list = nav.querySelectorAll( 'li' ), grid;
-      list.forEach( function( e ) {
-        e.addEventListener( 'click', function( event ) {
+      var lists = nav.querySelectorAll( 'li' ), grid, list, listEl;
+      lists.forEach( function( e ) {
+        list = el = e;
+        list.addEventListener( 'click', function( event ) {
           event.preventDefault();
+          listEl = list.querySelector( '.fwp-link-click' );
           if( this.classList.contains( 'fwp-active' ) ) {
             var that = this;
             document.querySelectorAll( root ).forEach( function( elem, ielem ) {
@@ -101,9 +106,9 @@
             document.querySelector( root + '.fwp-elementor-container-playlists' ).classList.remove( 'fwp-hidden' );
             that.classList.remove( 'fwp-active' );
           } else {
-            var order = e.querySelector( '.fwp-link-click' ).dataset.order;
-            if( order && playlist[ order ] ) {
-              grid = playlist[ order ].querySelector( '.imagehvr .imagehvr-content-wrapper .imagehvr-link' );
+            var order = listEl.dataset.order;
+            if( order && playlist[order] || list ) {
+              grid = (thisClass.settings.leatest&&playlist[order])?playlist[order].querySelector('.imagehvr .imagehvr-content-wrapper .imagehvr-link'):listEl;
               if( thisClass.settings.singleCategory ) {
                 thisClass.handlePlaylist( this, grid );
                 container.forEach( function( elem, ielem ) {
@@ -127,8 +132,9 @@
       } );
     }
     handlePlaylist( list, grid ) {
-      const thisClass = this;
-      var root, iframe, container, div, close, i, url, items, html;
+      const thisClass = this;var root, iframe, container, div, close, i, url, items, html, listEl;
+      listEl = list.querySelector('.fwp-link-click');
+      console.log([list, grid]);
       thisClass.removeActives( list );
       list.classList.add( 'fwp-active' );
       root = 'body .elementor-container.fwp-elementor-container';
@@ -150,7 +156,7 @@
         div.classList.add( 'fwp-ghost-card' );
         root.appendChild( div );
       }
-      url = thisClass.settings.url + '?action=' + thisClass.settings.token + '&playlist=' + grid.dataset.id + '&key=' + thisClass.settings.key;
+      url = thisClass.settings.url + '?action=' + thisClass.settings.token + '&playlist=' + ((thisClass.settings.leatest&&listEl.dataset.id)?listEl.dataset.id:grid.dataset.id) + '&key=' + thisClass.settings.key;
       $.getJSON( url, function( data ) {
         if( data.error ) {
           thisClass.denaid = true;
@@ -163,8 +169,8 @@
           root.classList.remove( 'fwp-ghost-container' );
           thisClass.nothingFound( root, { list: list, grid: grid, type: 'request', error: data.data } );
         } else {
-          data = ( data.data ) ? data.data : data;
-          items = ( data.items) ? data.items : [];
+          data = (data.data)?data.data:data;
+          items = (data.items)?data.items:[];
           html = '';
           if( items.length >= 1 ) {
             items.forEach( function( e, i ) {
@@ -175,11 +181,12 @@
               e.snippet.titleSrt = ( e.snippet.title.length > 30 ) ? e.snippet.title.substr( 0, 30 ) + '..' : e.snippet.title.substr( 0, 30 );
               e.thumbnails = ( e.thumbnails ) ? e.thumbnails : {};
               e.thumbnails.medium = ( e.thumbnails.medium ) ? e.thumbnails.medium : 'https://i.ytimg.com/vi/' + e.contentDetails.videoId + '/sddefault.jpg';
+              console.log(e);
               html += '\
                 <div class="imagehvr-wrapper elementor-element elementor-column elementor-inner-column elementor-col-3 elementor-col-md-4 elementor-col-sm-6">\
                   <div class="imagehvr">\
                     <div class="imagehvr-content-wrapper imagehvr-content-center imagehvr-anim-zoom-in-alt">\
-                        <a href="https://www.youtube.com/watch?v=' + e.contentDetails.videoId + '&amp;list=' + e.snippet.playlistId + '" class="imagehvr-link" data-embed="https://www.youtube.com/embed/videoseries?v=' + e.contentDetails.videoId + '&amp;list=' + e.snippet.playlistId + '" data-id="' + e.snippet.playlistId + '">\
+                        <a href="https://www.youtube.com/watch?v=' + e.contentDetails.videoId + '&amp;list=' + e.snippet.playlistId + '" class="imagehvr-link" data-embed="https://www.youtube.com/embed/videoseries?v=' + e.contentDetails.videoId + '&amp;list=' + e.snippet.playlistId + '" data-id="' + e.snippet.playlistId + '" data-is-playlist="'+((e.snippet.playlistId)?'true':'false')+'">\
                           <span class="imagehvr-icon ih-delay-zero imagehvr-anim-none">\
                             <i class="fas fa-play-circle"></i>\
                           </span>\
@@ -295,7 +302,7 @@
 				var videoId = $( this ).data( 'id' );
 				if( typeof videoUrl === undefined || ! videoUrl ) {return;}
 				if( typeof videoId === undefined || ! videoId ) {return;}
-        if( 1 == 1 ) {
+        if( false ) {
           if( this.parentElement.nextElementSibling.dataset.title ) {thisClass.currentTitle = this.parentElement.nextElementSibling.dataset.title;}
           var popup = '\
           <div class="yt-popup" id="media-youtube-popup" title="Press ESC to close.">\
